@@ -41,6 +41,7 @@ fun RadiosScreen(
     viewModel: RadiosViewModel = hiltViewModel()
 ) {
     val state = viewModel.state.collectAsState()
+    val onEvent = viewModel::onEvent
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -90,7 +91,9 @@ fun RadiosScreen(
                     ItemElement(
                         name = it.name,
                         isCenter = false,
-                        onClick = {})
+                        onClick = {
+                            onEvent(RadiosEvent.OnPlay(it.url))
+                        })
                 }
             }
         }

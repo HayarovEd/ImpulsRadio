@@ -1,6 +1,8 @@
 package com.example.myapplication.di
 
+import com.example.myapplication.data.repository.RadioPlayerRepositoryImpl
 import com.example.myapplication.data.repository.RemoteRepositoryImpl
+import com.example.myapplication.domain.repository.RadioPlayerRepository
 import com.example.myapplication.domain.repository.RemoteRepository
 import dagger.Binds
 import dagger.Module
@@ -14,7 +16,10 @@ abstract class DiModule {
 
     @Binds
     @Singleton
-    abstract fun fghbindRepositoryvgkt(remoteRepositoryImpl: RemoteRepositoryImpl): RemoteRepository
+    abstract fun bindRepository(remoteRepositoryImpl: RemoteRepositoryImpl): RemoteRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindRadioRepository(radioPlayerRepositoryImpl: RadioPlayerRepositoryImpl): RadioPlayerRepository
 
 }

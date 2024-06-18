@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myapplication.domain.repository.RadioPlayerRepository
 import com.example.myapplication.domain.repository.RemoteRepository
 import com.example.myapplication.domain.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class RadiosViewModel @Inject constructor(
     private val remoteRepository: RemoteRepository,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val radioPlayerRepository: RadioPlayerRepository
 ) : ViewModel() {
 
     private var _state = MutableStateFlow(RadiosState())
@@ -25,6 +27,17 @@ class RadiosViewModel @Inject constructor(
 
     init {
         getRadios()
+    }
+
+    fun onEvent(radiosEvent: RadiosEvent) {
+        when (radiosEvent) {
+            is RadiosEvent.OnPlay -> {
+                radioPlayerRepository.playRadio(radiosEvent.url)
+            }
+            RadiosEvent.OnStop -> {
+
+            }
+        }
     }
 
     private fun getRadios() {
