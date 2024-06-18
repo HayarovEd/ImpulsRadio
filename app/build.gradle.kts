@@ -78,4 +78,6 @@ dependencies {
     annotationProcessor (libs.google.hilt.compiler)
     kapt (libs.google.hilt.compiler)
     implementation (libs.androidx.hilt.navigation.compose)
+
+    implementation (libs.accompanist.systemuicontroller)
 }

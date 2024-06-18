@@ -22,10 +22,10 @@ class ProvinesViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
-        getProvinses()
+        getProvinces()
     }
 
-    private fun getProvinses() {
+    private fun getProvinces() {
         viewModelScope.launch {
             when (val result = remoteRepository.getProvincies()) {
                 is Resource.Error -> {

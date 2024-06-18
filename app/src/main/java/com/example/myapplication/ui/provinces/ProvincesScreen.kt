@@ -26,21 +26,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.example.myapplication.R
+import com.example.myapplication.domain.utils.RADIOS_SCREEN
 import com.example.myapplication.ui.theme.blue34
-import com.example.myapplication.ui.theme.blue45
 import com.example.myapplication.ui.theme.white
 import com.example.myapplication.ui.uikit.ItemElement
 
 @Composable
 fun ProvincesScreen(
     modifier: Modifier = Modifier,
-    viewModel: ProvinesViewModel = hiltViewModel()
+    viewModel: ProvinesViewModel = hiltViewModel(),
+    navController: NavHostController
 ) {
     val state = viewModel.state.collectAsState()
     Scaffold(
         modifier = modifier.fillMaxSize()
-    ) {paddings->
+    ) { paddings ->
         Column(
             modifier = modifier
                 .padding(paddings)
@@ -53,7 +55,8 @@ fun ProvincesScreen(
                 modifier = modifier.fillMaxWidth(),
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "",
-                contentScale = ContentScale.FillWidth)
+                contentScale = ContentScale.FillWidth
+            )
             Spacer(modifier = modifier.height(10.dp))
             Text(
                 modifier = modifier.fillMaxWidth(),
@@ -74,7 +77,9 @@ fun ProvincesScreen(
                     ItemElement(
                         name = it.name,
                         isCenter = true,
-                        onClick = {})
+                        onClick = {
+                            navController.navigate("$RADIOS_SCREEN/${it.id}/${it.name}")
+                        })
                 }
             }
         }

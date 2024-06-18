@@ -12,6 +12,7 @@ composeBom = "2024.06.00"
 jsoup = "1.17.2"
 hilt-android = "2.49"
 hiltNavigationCompose = "1.2.0"
+accompanistSystemuicontroller = "0.32.0"
 
 
 [libraries]
@@ -34,7 +35,7 @@ jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt-android" }
 google-hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt-android" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
-
+accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
