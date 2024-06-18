@@ -8,3 +8,5 @@ const val UNKNOWN_ERROR = "Неизвестная ошибка"
 
 const val PROVINCE_SCREEN = "province"
 const val RADIOS_SCREEN = "radios"
+
+const val START = "start"

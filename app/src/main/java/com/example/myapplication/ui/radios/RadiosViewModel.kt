@@ -32,7 +32,7 @@ class RadiosViewModel @Inject constructor(
     fun onEvent(radiosEvent: RadiosEvent) {
         when (radiosEvent) {
             is RadiosEvent.OnPlay -> {
-                radioPlayerRepository.playRadio(radiosEvent.url)
+                radioPlayerRepository.onStart(radiosEvent.url)
             }
             RadiosEvent.OnStop -> {
 
