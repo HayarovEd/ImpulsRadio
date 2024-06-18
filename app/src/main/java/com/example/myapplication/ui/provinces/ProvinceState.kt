@@ -1,7 +1,7 @@
-package com.example.myapplication.ui.state
+package com.example.myapplication.ui.provinces
 
 import com.example.myapplication.domain.model.Province
 
-data class MainState (
+data class ProvinceState (
     val provinces: List<Province> = emptyList()
 )

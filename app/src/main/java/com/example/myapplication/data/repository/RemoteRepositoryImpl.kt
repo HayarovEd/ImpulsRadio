@@ -1,5 +1,6 @@
 package com.example.myapplication.data.repository
 
+import android.util.Log
 import com.example.myapplication.data.mapper.convertToCategories
 import com.example.myapplication.domain.model.Province
 import com.example.myapplication.domain.repository.RemoteRepository
@@ -21,7 +22,9 @@ class RemoteRepositoryImpl @Inject constructor() : RemoteRepository {
             {
                 // Log.d("Okhttp", "get: ${BASE_URL_DIVIDENDS + secId.lowercase()}")
                 val doc = Jsoup.connect(BASE_URL + POST_URL_CAT).get()
-                val provinces = doc.data().convertToCategories()
+                val body = doc.body().html()
+                Log.d("TEST REMOTE DATA", "body $body")
+                val provinces = body.convertToCategories()
                 Resource.Success(provinces)
             }
         } catch (error: Exception) {
