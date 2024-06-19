@@ -1,9 +1,12 @@
 package com.example.myapplication.ui.swervice
 
-import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
-import android.media.MediaMetadataRetriever
-import androidx.media3.common.MediaItem
+import android.util.Log
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -14,10 +17,21 @@ import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import com.example.myapplication.domain.utils.START
+import com.example.myapplication.data.repository.DataStoreRepositoryImpl
+import com.example.myapplication.data.repository.DataStoreRepositoryImpl.Companion
+import com.example.myapplication.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_URL
+import com.example.myapplication.data.repository.dataStore
+import com.example.myapplication.domain.repository.DataStoreRepository
+import com.example.myapplication.domain.utils.RADIO_URL
+import com.example.myapplication.domain.utils.SETTINGS
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 @UnstableApi
-class MusicPlayerService: MediaSessionService() {
+class MusicPlayerService : MediaSessionService() {
 
 
     lateinit var player: Player
@@ -27,6 +41,8 @@ class MusicPlayerService: MediaSessionService() {
     private val dataSourceFactory = DefaultHttpDataSource.Factory()
 
     private val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
+
+    private val scope = CoroutineScope(Dispatchers.IO)
 
     private val renderersFactory = RenderersFactory { eventHandler, _, rendererListener, _, _ ->
         arrayOf(
@@ -40,16 +56,25 @@ class MusicPlayerService: MediaSessionService() {
         )
     }
 
-    override fun  onCreate() {
+    override fun onCreate() {
         super.onCreate()
-
-
+        scope.launch {
+            application
+                .dataStore
+                .data
+                .map {
+                it[DataStoreRepositoryImpl.FIELD_RADIO_URL]?:""
+            }.collect {
+                Log.d("TEST REMOTE DATA", "saved service url $it")
+            }
+        }
         player = ExoPlayer
             .Builder(this)
             .setRenderersFactory(renderersFactory)
             .setMediaSourceFactory(mediaSourceFactory)
             .build()
         session = MediaSession.Builder(this, player).build()
+
     }
 
 
@@ -68,7 +93,8 @@ class MusicPlayerService: MediaSessionService() {
         val player = session?.player!!
         if (!player.playWhenReady
             || player.mediaItemCount == 0
-            || player.playbackState == Player.STATE_ENDED) {
+            || player.playbackState == Player.STATE_ENDED
+        ) {
             stopSelf()
         }
     }
@@ -83,4 +109,7 @@ class MusicPlayerService: MediaSessionService() {
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
+    companion object {
+        val FIELD_RADIO_URL = stringPreferencesKey(RADIO_URL)
+    }
 }

@@ -4,10 +4,12 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myapplication.domain.repository.DataStoreRepository
 import com.example.myapplication.domain.repository.RadioPlayerRepository
 import com.example.myapplication.domain.repository.RemoteRepository
 import com.example.myapplication.domain.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -19,11 +21,13 @@ import javax.inject.Inject
 class RadiosViewModel @Inject constructor(
     private val remoteRepository: RemoteRepository,
     private val savedStateHandle: SavedStateHandle,
-    private val radioPlayerRepository: RadioPlayerRepository
+    private val radioPlayerRepository: RadioPlayerRepository,
+    private val dataStoreRepository: DataStoreRepository,
 ) : ViewModel() {
 
     private var _state = MutableStateFlow(RadiosState())
     val state = _state.asStateFlow()
+
 
     init {
         getRadios()
@@ -33,6 +37,10 @@ class RadiosViewModel @Inject constructor(
         when (radiosEvent) {
             is RadiosEvent.OnPlay -> {
                 radioPlayerRepository.onStart(radiosEvent.url)
+                viewModelScope.launch {
+                    dataStoreRepository.setRadioUrl(radiosEvent.url)
+                    //radioPlayerRepository.getMetaData(radiosEvent.url)
+                }
             }
             RadiosEvent.OnStop -> {
 

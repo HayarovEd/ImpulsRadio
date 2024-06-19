@@ -1,7 +1,11 @@
 package com.example.myapplication.di
 
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
+import com.example.myapplication.data.repository.DataStoreRepositoryImpl
 import com.example.myapplication.data.repository.RadioPlayerRepositoryImpl
 import com.example.myapplication.data.repository.RemoteRepositoryImpl
+import com.example.myapplication.domain.repository.DataStoreRepository
 import com.example.myapplication.domain.repository.RadioPlayerRepository
 import com.example.myapplication.domain.repository.RemoteRepository
 import dagger.Binds
@@ -18,8 +22,13 @@ abstract class DiModule {
     @Singleton
     abstract fun bindRepository(remoteRepositoryImpl: RemoteRepositoryImpl): RemoteRepository
 
+    @OptIn(UnstableApi::class)
     @Binds
     @Singleton
     abstract fun bindRadioRepository(radioPlayerRepositoryImpl: RadioPlayerRepositoryImpl): RadioPlayerRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDataStoreoRepository(dataStoreRepositoryImpl: DataStoreRepositoryImpl): DataStoreRepository
 
 }

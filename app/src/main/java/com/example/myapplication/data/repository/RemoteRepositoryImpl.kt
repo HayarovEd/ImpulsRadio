@@ -25,7 +25,7 @@ class RemoteRepositoryImpl @Inject constructor() : RemoteRepository {
             {
                 val doc = Jsoup.connect(BASE_URL + POST_URL_CAT).get()
                 val body = doc.body().html()
-                Log.d("TEST REMOTE DATA", "body $body")
+
                 val provinces = body.convertToCategories()
                 Resource.Success(provinces)
             }
