@@ -9,6 +9,7 @@ import com.example.myapplication.domain.repository.RemoteRepository
 import com.example.myapplication.domain.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,34 +21,42 @@ import javax.inject.Inject
 @HiltViewModel
 class ProvinesViewModel @Inject constructor(
     private val remoteRepository: RemoteRepository,
+    private val radioPlayerRepository: RadioPlayerRepository,
     private val dataStoreRepository: DataStoreRepository,
 ): ViewModel() {
 
     private var _state = MutableStateFlow(ProvinceState())
     val state = _state.asStateFlow()
 
-    val sharedFlow = MutableSharedFlow<String>()
-
-    private val job = Job()
 
     init {
         getProvinces()
         getRadioUrl()
         getRadioName()
-        getTrack()
+        //getTrack()
+        getMetaData()
     }
 
-    private fun getTrack() {
-        viewModelScope.launch {
-            dataStoreRepository.readTrack().collect {
-                Log.d("TEST REMOTE DATA", "saved url $it")
-                _state.value.copy (
-                    track = it
-                )
-                    .updateState()
+    private fun getMetaData() {
+        viewModelScope.launch  {
+            while (true) {
+               when  (val result = radioPlayerRepository.getMetaData(_state.value.radioUrl)) {
+                   is Resource.Error -> {
+
+                   }
+                   is Resource.Success -> {
+                       Log.d("TEST REMOTE DATA1", "current track ${result.data}")
+                       _state.value.copy (
+                           track = result.data?:""
+                       )
+                           .updateState()
+                   }
+               }
+                delay(5000)
             }
         }
     }
+
 
     private fun getRadioName() {
         viewModelScope.launch {
@@ -63,7 +72,6 @@ class ProvinesViewModel @Inject constructor(
     private fun getRadioUrl() {
         viewModelScope.launch {
             dataStoreRepository.readRadioUrl().collect {
-                Log.d("TEST REMOTE DATA", "saved url $it")
                 _state.value.copy (
                     radioUrl = it
                 )

@@ -1,7 +1,15 @@
 package com.example.myapplication.ui.swervice
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.os.Bundle
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
 import androidx.datastore.preferences.core.edit
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -11,28 +19,35 @@ import androidx.media3.exoplayer.RenderersFactory
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.session.CommandButton
+import androidx.media3.session.MediaLibraryService
+import androidx.media3.session.MediaNotification
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import androidx.media3.session.MediaStyleNotificationHelper
+import com.example.myapplication.R
 import com.example.myapplication.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_TRACK
 import com.example.myapplication.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_URL
 import com.example.myapplication.data.repository.dataStore
 import com.example.myapplication.domain.utils.PARSER_URL
 import com.example.myapplication.domain.utils.Resource
 import com.example.myapplication.domain.utils.UNKNOWN_ERROR
+import com.example.myapplication.ui.MainActivity
+import com.google.common.collect.ImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 
+
 @UnstableApi
 class MusicPlayerService : MediaSessionService() {
 
 
-    lateinit var player: Player
+    private lateinit var player: Player
 
     private var session: MediaSession? = null
 
@@ -55,8 +70,31 @@ class MusicPlayerService : MediaSessionService() {
         )
     }
 
+    private lateinit var nBuilder: NotificationCompat.Builder
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
         super.onCreate()
+        this.setMediaNotificationProvider(object : MediaNotification.Provider{
+            override fun createNotification(
+                mediaSession: MediaSession,
+                customLayout: ImmutableList<CommandButton>,
+                actionFactory: MediaNotification.ActionFactory,
+                onNotificationChangedCallback: MediaNotification.Provider.Callback
+            ): MediaNotification {
+                createNotification(mediaSession)
+                return MediaNotification(1,nBuilder.build())
+            }
+
+            override fun handleCustomCommand(
+                session: MediaSession,
+                action: String,
+                extras: Bundle
+            ): Boolean {
+                TODO("Not yet implemented")
+            }
+        })
         scope.launch {
             application
                 .dataStore
@@ -93,7 +131,8 @@ class MusicPlayerService : MediaSessionService() {
             .setMediaSourceFactory(mediaSourceFactory)
             .build()
         session = MediaSession
-            .Builder(this, player).build()
+            .Builder(this, player)
+            .build()
 
     }
 
@@ -136,5 +175,27 @@ class MusicPlayerService : MediaSessionService() {
             error.printStackTrace()
             Resource.Error(message = error.localizedMessage ?: UNKNOWN_ERROR)
         }
+    }
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun  createNotification(session: MediaSession) {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val requestCode = 0
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE,
+        )
+        val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(NotificationChannel("notification_id","Channel", NotificationManager.IMPORTANCE_LOW))
+
+        nBuilder = NotificationCompat.Builder(this,"notification_id")
+            .setSmallIcon(R.drawable.logo_s)
+            .setContentIntent(pendingIntent)
+            .setStyle(MediaStyleNotificationHelper.MediaStyle(session))
+
     }
 }

@@ -70,6 +70,7 @@ class RadioPlayerRepositoryImpl @Inject constructor(
         val mediaItem =
             MediaItem.Builder()
                 .setUri(radioUrl)
+
                 .setMediaMetadata(
                     MediaMetadata.Builder()
                        //.setArtist(track)
