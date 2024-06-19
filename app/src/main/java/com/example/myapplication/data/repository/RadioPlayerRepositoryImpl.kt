@@ -2,6 +2,8 @@ package com.example.myapplication.data.repository
 
 import android.app.Application
 import android.content.ComponentName
+import android.media.MediaMetadataRetriever
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -46,6 +48,10 @@ class RadioPlayerRepositoryImpl @Inject constructor(
                 a.setMediaItem(mediaItem)
                 a.prepare()
                 a.play()
+                val metaRetriever  =  MediaMetadataRetriever()
+                metaRetriever.setDataSource(radioUrl)
+                val artist =  metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
+                Log.d("TEST GET DATA", "data $artist")
             },
             MoreExecutors.directExecutor()
         )
