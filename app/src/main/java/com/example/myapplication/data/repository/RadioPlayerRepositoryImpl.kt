@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
@@ -62,14 +63,28 @@ class RadioPlayerRepositoryImpl @Inject constructor(
     }
 
     @OptIn(UnstableApi::class)
-    override fun onStart(radioUrl: String) {
-        val mediaItem = MediaItem.fromUri(radioUrl)
+    override fun onStart(
+        title: String,
+       // track: String,
+        radioUrl: String) {
+        val mediaItem =
+            MediaItem.Builder()
+                .setUri(radioUrl)
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                       //.setArtist(track)
+                        .setTitle(title)
+                       // .setArtworkUri(artworkUri)
+                        .build()
+                )
+                .build()
+
         controllerFuture.addListener(
             {
-                val a = controllerFuture.get()
-                a.setMediaItem(mediaItem)
-                a.prepare()
-                a.play()
+                val mediaPlayer = controllerFuture.get()
+                mediaPlayer.setMediaItem(mediaItem)
+                mediaPlayer.prepare()
+                mediaPlayer.play()
             },
             MoreExecutors.directExecutor()
         )

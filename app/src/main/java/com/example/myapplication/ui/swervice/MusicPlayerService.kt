@@ -1,12 +1,8 @@
 package com.example.myapplication.ui.swervice
 
-import android.content.Context
 import android.content.Intent
 import android.util.Log
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import androidx.datastore.preferences.core.edit
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -17,18 +13,20 @@ import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import com.example.myapplication.data.repository.DataStoreRepositoryImpl
-import com.example.myapplication.data.repository.DataStoreRepositoryImpl.Companion
+import com.example.myapplication.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_TRACK
 import com.example.myapplication.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_URL
 import com.example.myapplication.data.repository.dataStore
-import com.example.myapplication.domain.repository.DataStoreRepository
-import com.example.myapplication.domain.utils.RADIO_URL
-import com.example.myapplication.domain.utils.SETTINGS
+import com.example.myapplication.domain.utils.PARSER_URL
+import com.example.myapplication.domain.utils.Resource
+import com.example.myapplication.domain.utils.UNKNOWN_ERROR
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.jsoup.Jsoup
 
 @UnstableApi
 class MusicPlayerService : MediaSessionService() {
@@ -43,6 +41,7 @@ class MusicPlayerService : MediaSessionService() {
     private val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
 
     private val scope = CoroutineScope(Dispatchers.IO)
+    //private var job: Job? = null
 
     private val renderersFactory = RenderersFactory { eventHandler, _, rendererListener, _, _ ->
         arrayOf(
@@ -62,32 +61,42 @@ class MusicPlayerService : MediaSessionService() {
             application
                 .dataStore
                 .data
-                .map {
-                it[DataStoreRepositoryImpl.FIELD_RADIO_URL]?:""
-            }.collect {
-                Log.d("TEST REMOTE DATA", "saved service url $it")
-            }
+                .map {mapped->
+                    Log.d("TEST REMOTE SERVICE DATA", "get radio ${mapped[FIELD_RADIO_URL]}")
+                     mapped[FIELD_RADIO_URL] ?: ""
+                    //Log.d("TEST REMOTE SERVICE DATA", "get radio a  $a")
+                }.collect { collected ->
+                    Log.d("TEST REMOTE SERVICE DATA", "radio $collected")
+                    while (true) {
+                        when (val result = getMetaData(collected)) {
+                            is Resource.Error -> {
+                                Log.d("TEST REMOTE SERVICE DATA", "error ${result.message}")
+                            }
+
+                            is Resource.Success -> {
+                                if (!result.data.isNullOrBlank()) {
+                                    application.dataStore.edit { settings ->
+                                        settings[FIELD_RADIO_TRACK] = result.data
+                                    }
+                                    Log.d("TEST REMOTE SERVICE DATA", "body ${result.data}")
+                                }
+                            }
+                        }
+                        delay(5000)
+                    }
+                }
         }
+
         player = ExoPlayer
             .Builder(this)
             .setRenderersFactory(renderersFactory)
             .setMediaSourceFactory(mediaSourceFactory)
             .build()
-        session = MediaSession.Builder(this, player).build()
+        session = MediaSession
+            .Builder(this, player).build()
 
     }
 
-
-    /*override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        super.onStartCommand(intent, flags, startId)
-        val radioUrl=intent?.getStringExtra(START)
-        radioUrl?.let {
-            player.setMediaItem(MediaItem.fromUri(it))
-            player.prepare()
-            player.play()
-        }
-        return START_STICKY
-    }*/
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         val player = session?.player!!
@@ -109,7 +118,23 @@ class MusicPlayerService : MediaSessionService() {
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
-    companion object {
-        val FIELD_RADIO_URL = stringPreferencesKey(RADIO_URL)
+
+    private suspend fun getMetaData(radioUrl: String): Resource<String> {
+        return try {
+            withContext(Dispatchers.IO)
+            {
+                val doc = Jsoup.connect(PARSER_URL)
+                    .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0")
+                    .data("text", radioUrl)
+                    .post()
+                val body = doc.body().html()
+                Log.d("TEST REMOTE DATA", "body $body")
+                Resource.Success(body)
+            }
+        } catch (error: Exception) {
+            error.printStackTrace()
+            Resource.Error(message = error.localizedMessage ?: UNKNOWN_ERROR)
+        }
     }
 }

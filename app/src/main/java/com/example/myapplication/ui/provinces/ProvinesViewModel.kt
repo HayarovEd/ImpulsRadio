@@ -21,7 +21,6 @@ import javax.inject.Inject
 class ProvinesViewModel @Inject constructor(
     private val remoteRepository: RemoteRepository,
     private val dataStoreRepository: DataStoreRepository,
-    private val radioPlayerRepository: RadioPlayerRepository,
 ): ViewModel() {
 
     private var _state = MutableStateFlow(ProvinceState())
@@ -34,6 +33,31 @@ class ProvinesViewModel @Inject constructor(
     init {
         getProvinces()
         getRadioUrl()
+        getRadioName()
+        getTrack()
+    }
+
+    private fun getTrack() {
+        viewModelScope.launch {
+            dataStoreRepository.readTrack().collect {
+                Log.d("TEST REMOTE DATA", "saved url $it")
+                _state.value.copy (
+                    track = it
+                )
+                    .updateState()
+            }
+        }
+    }
+
+    private fun getRadioName() {
+        viewModelScope.launch {
+            dataStoreRepository.readRadioName().collect {
+                _state.value.copy (
+                    radioName = it
+                )
+                    .updateState()
+            }
+        }
     }
 
     private fun getRadioUrl() {

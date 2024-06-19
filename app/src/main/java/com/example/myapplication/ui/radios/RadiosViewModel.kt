@@ -9,7 +9,6 @@ import com.example.myapplication.domain.repository.RadioPlayerRepository
 import com.example.myapplication.domain.repository.RemoteRepository
 import com.example.myapplication.domain.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -36,10 +35,12 @@ class RadiosViewModel @Inject constructor(
     fun onEvent(radiosEvent: RadiosEvent) {
         when (radiosEvent) {
             is RadiosEvent.OnPlay -> {
-                radioPlayerRepository.onStart(radiosEvent.url)
                 viewModelScope.launch {
                     dataStoreRepository.setRadioUrl(radiosEvent.url)
-                    //radioPlayerRepository.getMetaData(radiosEvent.url)
+                    dataStoreRepository.setRadioName(radiosEvent.name)
+                    radioPlayerRepository.onStart(
+                        title = radiosEvent.name,
+                        radioUrl = radiosEvent.url)
                 }
             }
             RadiosEvent.OnStop -> {

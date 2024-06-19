@@ -14,3 +14,5 @@ const val START = "start"
 
 const val SETTINGS = "settings"
 const val RADIO_URL = "radio_url"
+const val RADIO_TRACK = "radio_track"
+const val RADIO_NAME = "radio_name"

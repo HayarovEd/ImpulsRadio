@@ -60,7 +60,7 @@ fun ProvincesScreen(
             Spacer(modifier = modifier.height(10.dp))
             Text(
                 modifier = modifier.fillMaxWidth(),
-                text = stringResource(id = R.string.now_is_played),
+                text = "${stringResource(id = R.string.now_is_played)}\n${state.value.radioName}\n${state.value.track}",
                 style = TextStyle(
                     fontSize = 24.sp,
                     fontWeight = FontWeight(600),

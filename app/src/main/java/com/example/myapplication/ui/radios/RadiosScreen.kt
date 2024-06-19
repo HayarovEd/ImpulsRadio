@@ -75,7 +75,8 @@ fun RadiosScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "",
-                            tint = white)
+                            tint = white
+                        )
                     }
                 }
             )
@@ -98,7 +99,12 @@ fun RadiosScreen(
                         name = it.name,
                         isCenter = false,
                         onClick = {
-                            onEvent(RadiosEvent.OnPlay(it.url))
+                            onEvent(
+                                RadiosEvent.OnPlay(
+                                    name = it.name,
+                                    url = it.url
+                                )
+                            )
                         })
                 }
             }
