@@ -5,12 +5,14 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.myapplication.domain.repository.DataStoreRepository
 import com.example.myapplication.domain.utils.RADIO_NAME
 import com.example.myapplication.domain.utils.RADIO_TRACK
 import com.example.myapplication.domain.utils.RADIO_URL
+import com.example.myapplication.domain.utils.SESSION_ID
 import com.example.myapplication.domain.utils.SETTINGS
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -61,10 +63,17 @@ class DataStoreRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun readSessionId(): Flow<Int> {
+        return application.dataStore.data.map {
+            it[FIELD_SESSION_ID]?:0
+        }
+    }
+
 
     companion object {
         val FIELD_RADIO_URL = stringPreferencesKey(RADIO_URL)
         val FIELD_RADIO_TRACK = stringPreferencesKey(RADIO_TRACK)
         val FIELD_RADIO_NAME = stringPreferencesKey(RADIO_NAME)
+        val FIELD_SESSION_ID = intPreferencesKey(SESSION_ID)
     }
 }

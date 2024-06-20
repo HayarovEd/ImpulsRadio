@@ -6,5 +6,6 @@ data class ProvinceState (
     val provinces: List<Province> = emptyList(),
     val radioUrl: String = "",
     val radioName: String = "",
+    val sessionId: Int = 0,
     val track: String = "",
 )

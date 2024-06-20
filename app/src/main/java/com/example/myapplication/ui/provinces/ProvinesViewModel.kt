@@ -35,6 +35,18 @@ class ProvinesViewModel @Inject constructor(
         getRadioName()
         //getTrack()
         getMetaData()
+        getSessionId()
+    }
+
+    private fun getSessionId() {
+        viewModelScope.launch {
+            dataStoreRepository.readSessionId().collect {
+                _state.value.copy (
+                    sessionId = it
+                )
+                    .updateState()
+            }
+        }
     }
 
     private fun getMetaData() {

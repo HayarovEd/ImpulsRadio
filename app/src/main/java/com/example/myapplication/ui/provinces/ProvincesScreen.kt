@@ -33,6 +33,7 @@ import com.example.myapplication.domain.utils.RADIOS_SCREEN
 import com.example.myapplication.ui.theme.blue34
 import com.example.myapplication.ui.theme.white
 import com.example.myapplication.ui.uikit.ItemElement
+import com.example.myapplication.ui.uikit.SquareBarVisualizerRelease
 
 @Composable
 fun ProvincesScreen(
@@ -42,7 +43,14 @@ fun ProvincesScreen(
 ) {
     val state = viewModel.state.collectAsState()
     Scaffold(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        bottomBar = {
+            if (state.value.sessionId!=0) {
+                SquareBarVisualizerRelease(
+                    audioSessionId = state.value.sessionId
+                )
+            }
+        }
     ) { paddings ->
         Column(
             modifier = modifier

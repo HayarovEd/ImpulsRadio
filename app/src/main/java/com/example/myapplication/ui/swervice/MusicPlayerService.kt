@@ -26,8 +26,10 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
 import com.example.myapplication.R
+import com.example.myapplication.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_NAME
 import com.example.myapplication.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_TRACK
 import com.example.myapplication.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_URL
+import com.example.myapplication.data.repository.DataStoreRepositoryImpl.Companion.FIELD_SESSION_ID
 import com.example.myapplication.data.repository.dataStore
 import com.example.myapplication.domain.utils.PARSER_URL
 import com.example.myapplication.domain.utils.Resource
@@ -133,7 +135,12 @@ class MusicPlayerService : MediaSessionService() {
         session = MediaSession
             .Builder(this, player)
             .build()
-
+        val audioSessionId = (player as ExoPlayer).audioSessionId
+        scope.launch {
+            application.dataStore.edit { settings ->
+                settings[FIELD_SESSION_ID] = audioSessionId
+            }
+        }
     }
 
 
