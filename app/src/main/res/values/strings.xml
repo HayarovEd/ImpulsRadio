@@ -4,4 +4,6 @@
     <string name="important_access">Доступ к записи нужен для работы визуализации</string>
     <string name="access_record">Пожалуйста предоставьте доступ</string>
     <string name="last_radios">Последние прослушанные радиостанции</string>
+    <string name="choise_radio">Выбор радио</string>
+    <string name="choose_region">Выбор региона</string>
 </resources>

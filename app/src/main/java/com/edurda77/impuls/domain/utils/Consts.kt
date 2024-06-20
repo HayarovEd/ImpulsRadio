@@ -7,6 +7,7 @@ const val PARSER_URL = "https://radio.impulsfm.ru/parser.php"
 
 const val UNKNOWN_ERROR = "Неизвестная ошибка"
 
+const val MAIN_SCREEN = "main"
 const val PROVINCE_SCREEN = "province"
 const val RADIOS_SCREEN = "radios"
 

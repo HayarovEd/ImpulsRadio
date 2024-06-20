@@ -3,6 +3,7 @@ package com.edurda77.impuls.data.repository
 import android.app.Application
 import android.content.ComponentName
 import android.media.MediaMetadataRetriever
+import android.media.session.PlaybackState
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
@@ -40,8 +41,27 @@ class RadioPlayerRepositoryImpl @Inject constructor(
         mediaPlayer.play()
     }
 
+    override fun checkPlayRadio(callback: (Boolean) -> Unit) {
+        controllerFuture.addListener(
+            {
+                val isPlay = controllerFuture.get().playbackState == PlaybackState.STATE_PLAYING
+                Log.d("TEST IS PLAY", "is play $isPlay")
+                callback(isPlay)
+            },
+            MoreExecutors.directExecutor()
+
+        )
+
+    }
+
     override fun stopRadio() {
-        mediaPlayer.stop()
+        controllerFuture.addListener(
+            {
+                val mediaPlayer = controllerFuture.get()
+                mediaPlayer.stop()
+            },
+            MoreExecutors.directExecutor()
+        )
     }
 
     override suspend fun getMetaData(radioUrl:String): Resource<String> {

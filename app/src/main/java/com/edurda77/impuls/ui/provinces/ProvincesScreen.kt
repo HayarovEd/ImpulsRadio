@@ -1,24 +1,26 @@
 package com.edurda77.impuls.ui.provinces
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -30,10 +32,11 @@ import androidx.navigation.NavHostController
 import com.edurda77.impuls.R
 import com.edurda77.impuls.domain.utils.RADIOS_SCREEN
 import com.edurda77.impuls.ui.theme.blue34
+import com.edurda77.impuls.ui.theme.blue53
 import com.edurda77.impuls.ui.theme.white
 import com.edurda77.impuls.ui.uikit.ItemElement
-import com.edurda77.impuls.ui.uikit.SquareBarVisualizerRelease
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProvincesScreen(
     modifier: Modifier = Modifier,
@@ -41,15 +44,38 @@ fun ProvincesScreen(
     navController: NavHostController
 ) {
     val state = viewModel.state.collectAsState()
-    val onEvent = viewModel::onEvent
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        bottomBar = {
-            if (state.value.sessionId != 0) {
-                SquareBarVisualizerRelease(
-                    audioSessionId = state.value.sessionId
-                )
-            }
+        topBar = {
+            TopAppBar(
+                modifier = modifier
+                    .fillMaxWidth(),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = blue53
+                ),
+                title = {
+                    Text(
+                        modifier = modifier.fillMaxWidth(),
+                        text = stringResource(R.string.choose_region),
+                        style = TextStyle(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight(600),
+                            textAlign = TextAlign.Center,
+                            color = white
+                        )
+                    )
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = { navController.navigateUp() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "",
+                            tint = white
+                        )
+                    }
+                }
+            )
         }
     ) { paddings ->
         Column(
@@ -60,24 +86,6 @@ fun ProvincesScreen(
                 .padding(15.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                modifier = modifier.fillMaxWidth(),
-                painter = painterResource(id = R.drawable.logo2),
-                contentDescription = "",
-                contentScale = ContentScale.FillWidth
-            )
-            Spacer(modifier = modifier.height(10.dp))
-            Text(
-                modifier = modifier.fillMaxWidth(),
-                text = "${stringResource(id = R.string.now_is_played)} ${state.value.radioName}\n${state.value.track}",
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight(600),
-                    textAlign = TextAlign.Center,
-                    color = white
-                )
-            )
-            Spacer(modifier = modifier.height(5.dp))
             LazyColumn(
                 modifier = modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(15.dp)
@@ -89,37 +97,6 @@ fun ProvincesScreen(
                         onClick = {
                             navController.navigate("$RADIOS_SCREEN/${it.id}/${it.name}")
                         })
-                }
-            }
-            Spacer(modifier = modifier.height(10.dp))
-            Text(
-                modifier = modifier.fillMaxWidth(),
-                text = stringResource(R.string.last_radios),
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight(600),
-                    textAlign = TextAlign.Center,
-                    color = white
-                )
-            )
-            Spacer(modifier = modifier.height(5.dp))
-            LazyColumn(
-                modifier = modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(15.dp)
-            ) {
-                items(state.value.lastRadio) {
-                    ItemElement(
-                        name = it.name,
-                        isCenter = false,
-                        onClick = {
-                            onEvent(
-                                ProvincesEvent.OnPlay(
-                                    name = it.name,
-                                    url = it.url
-                                )
-                            )
-                        }
-                    )
                 }
             }
         }

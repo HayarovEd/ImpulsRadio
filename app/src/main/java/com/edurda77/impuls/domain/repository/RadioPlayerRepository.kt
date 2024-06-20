@@ -12,4 +12,5 @@ interface RadioPlayerRepository {
     )
 
     suspend fun getMetaData(radioUrl: String): Resource<String>
+    fun checkPlayRadio(callback: (Boolean) -> Unit)
 }

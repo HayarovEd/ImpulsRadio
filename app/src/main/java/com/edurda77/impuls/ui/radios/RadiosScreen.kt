@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
+import com.edurda77.impuls.domain.utils.MAIN_SCREEN
 import com.edurda77.impuls.ui.theme.blue34
 import com.edurda77.impuls.ui.theme.blue53
 import com.edurda77.impuls.ui.theme.white
@@ -101,7 +102,9 @@ fun RadiosScreen(
                                     url = it.url
                                 )
                             )
-                        })
+                            navController.navigate(MAIN_SCREEN)
+                        }
+                    )
                 }
             }
         }
