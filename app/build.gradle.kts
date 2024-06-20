@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.myapplication"
+    namespace = "com.edurda77.impuls"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.myapplication"
+        applicationId = "com.edurda77.impuls"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -90,4 +90,6 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.audiovisualizer)
+
+    implementation (libs.accompanist.permissions)
 }
