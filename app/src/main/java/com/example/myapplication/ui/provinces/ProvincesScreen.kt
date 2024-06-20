@@ -62,7 +62,7 @@ fun ProvincesScreen(
         ) {
             Image(
                 modifier = modifier.fillMaxWidth(),
-                painter = painterResource(id = R.drawable.logo),
+                painter = painterResource(id = R.drawable.logo2),
                 contentDescription = "",
                 contentScale = ContentScale.FillWidth
             )
