@@ -10,6 +10,9 @@ import androidx.media3.exoplayer.RenderersFactory
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.room.Room
+import com.edurda77.impuls.data.local.RadioDatabase
+import com.edurda77.impuls.domain.utils.DB
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -42,6 +45,17 @@ object ApiModule {
             .Builder(app)
             .setRenderersFactory(renderersFactory)
             .setMediaSourceFactory(mediaSourceFactory)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDatabase(app: Application): RadioDatabase {
+        return Room.databaseBuilder(
+            app,
+            RadioDatabase::class.java,
+            DB
+        )
             .build()
     }
 

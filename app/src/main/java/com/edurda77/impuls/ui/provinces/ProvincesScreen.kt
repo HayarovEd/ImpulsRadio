@@ -41,10 +41,11 @@ fun ProvincesScreen(
     navController: NavHostController
 ) {
     val state = viewModel.state.collectAsState()
+    val onEvent = viewModel::onEvent
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
-            if (state.value.sessionId!=0) {
+            if (state.value.sessionId != 0) {
                 SquareBarVisualizerRelease(
                     audioSessionId = state.value.sessionId
                 )
@@ -68,7 +69,7 @@ fun ProvincesScreen(
             Spacer(modifier = modifier.height(10.dp))
             Text(
                 modifier = modifier.fillMaxWidth(),
-                text = "${stringResource(id = R.string.now_is_played)}\n${state.value.radioName}\n${state.value.track}",
+                text = "${stringResource(id = R.string.now_is_played)} ${state.value.radioName}\n${state.value.track}",
                 style = TextStyle(
                     fontSize = 18.sp,
                     fontWeight = FontWeight(600),
@@ -76,7 +77,7 @@ fun ProvincesScreen(
                     color = white
                 )
             )
-            Spacer(modifier = modifier.height(10.dp))
+            Spacer(modifier = modifier.height(5.dp))
             LazyColumn(
                 modifier = modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(15.dp)
@@ -88,6 +89,37 @@ fun ProvincesScreen(
                         onClick = {
                             navController.navigate("$RADIOS_SCREEN/${it.id}/${it.name}")
                         })
+                }
+            }
+            Spacer(modifier = modifier.height(10.dp))
+            Text(
+                modifier = modifier.fillMaxWidth(),
+                text = stringResource(R.string.last_radios),
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight(600),
+                    textAlign = TextAlign.Center,
+                    color = white
+                )
+            )
+            Spacer(modifier = modifier.height(5.dp))
+            LazyColumn(
+                modifier = modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(15.dp)
+            ) {
+                items(state.value.lastRadio) {
+                    ItemElement(
+                        name = it.name,
+                        isCenter = false,
+                        onClick = {
+                            onEvent(
+                                ProvincesEvent.OnPlay(
+                                    name = it.name,
+                                    url = it.url
+                                )
+                            )
+                        }
+                    )
                 }
             }
         }

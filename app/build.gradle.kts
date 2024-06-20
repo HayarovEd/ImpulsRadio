@@ -92,4 +92,14 @@ dependencies {
     implementation(libs.audiovisualizer)
 
     implementation (libs.accompanist.permissions)
+
+    //Room
+    implementation(libs.androidx.room.runtime)
+    kapt(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+
+}
+
+kapt{
+    correctErrorTypes = true
 }

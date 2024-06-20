@@ -3,4 +3,5 @@
     <string name="now_is_played">Вещает:</string>
     <string name="important_access">Доступ к записи нужен для работы визуализации</string>
     <string name="access_record">Пожалуйста предоставьте доступ</string>
+    <string name="last_radios">Последние прослушанные радиостанции</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.edurda77.impuls.data.mapper
 
+import com.edurda77.impuls.data.local.RadioEntity
 import com.edurda77.impuls.domain.model.Province
 import com.edurda77.impuls.domain.model.RadioStation
 
@@ -82,4 +83,13 @@ fun String.convertToRadios(): List<RadioStation> {
 private fun parseNameOfProvince(input: String): String {
     val parts = input.split(" ")
     return parts.dropLast(1).joinToString(" ")
+}
+
+fun List<RadioEntity>.convertToRadios(): List<RadioStation> {
+    return this.map { radio->
+        RadioStation(
+            name = radio.name,
+            url = radio.url
+        )
+    }
 }

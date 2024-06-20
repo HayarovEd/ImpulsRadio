@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
 import com.edurda77.impuls.domain.repository.RemoteRepository
@@ -22,6 +23,7 @@ class RadiosViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val radioPlayerRepository: RadioPlayerRepository,
     private val dataStoreRepository: DataStoreRepository,
+    private val cacheRepository: CacheRepository
 ) : ViewModel() {
 
     private var _state = MutableStateFlow(RadiosState())
@@ -40,9 +42,15 @@ class RadiosViewModel @Inject constructor(
                     dataStoreRepository.setRadioName(radiosEvent.name)
                     radioPlayerRepository.onStart(
                         title = radiosEvent.name,
-                        radioUrl = radiosEvent.url)
+                        radioUrl = radiosEvent.url
+                    )
+                    cacheRepository.insertRadio(
+                        name = radiosEvent.name,
+                        url = radiosEvent.url
+                    )
                 }
             }
+
             RadiosEvent.OnStop -> {
 
             }
