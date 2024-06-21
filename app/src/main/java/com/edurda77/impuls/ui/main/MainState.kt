@@ -10,4 +10,5 @@ data class MainState (
     val sessionId: Int = 0,
     val track: String = "",
     val isPlayed: Boolean = false,
+    val isShowButton: Boolean = false,
 )

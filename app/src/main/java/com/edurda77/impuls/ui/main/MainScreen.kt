@@ -89,33 +89,35 @@ fun MainScreen(
                 )
             )
             Spacer(modifier = modifier.height(10.dp))
-            IconButton(
-                modifier = modifier.size(100.dp),
-                onClick = {
-                    if (state.value.isPlayed) {
-                        onEvent(
-                            MainEvent.OnStop
-                        )
-                    } else {
-                        onEvent(
-                            MainEvent.OnPlay(
-                                name = state.value.lastRadio.last().name,
-                                url = state.value.lastRadio.last().url,
-                            )
-                        )
-                    }
-                }) {
-                Icon(
+            if(state.value.isShowButton) {
+                IconButton(
                     modifier = modifier.size(100.dp),
-                    imageVector = if (state.value.isPlayed) ImageVector.vectorResource(id = R.drawable.baseline_stop_circle) else ImageVector.vectorResource(
-                        id = R.drawable.baseline_play_circle_outline
-                    ),
-                    contentDescription = "",
-                    tint = white
-                )
+                    onClick = {
+                        if (state.value.isPlayed) {
+                            onEvent(
+                                MainEvent.OnStop
+                            )
+                        } else {
+                            onEvent(
+                                MainEvent.OnPlay(
+                                    name = state.value.lastRadio.last().name,
+                                    url = state.value.lastRadio.last().url,
+                                )
+                            )
+                        }
+                    }) {
+                    Icon(
+                        modifier = modifier.size(100.dp),
+                        imageVector = if (state.value.isPlayed) ImageVector.vectorResource(id = R.drawable.baseline_stop_circle) else ImageVector.vectorResource(
+                            id = R.drawable.baseline_play_circle_outline
+                        ),
+                        contentDescription = "",
+                        tint = white
+                    )
 
+                }
+                Spacer(modifier = modifier.height(10.dp))
             }
-            Spacer(modifier = modifier.height(10.dp))
             Button(
                 modifier = modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(15.dp),

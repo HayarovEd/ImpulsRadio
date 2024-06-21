@@ -148,6 +148,12 @@ class MainViewModel @Inject constructor(
                     radioUrl = it
                 )
                     .updateState()
+                if (it.isNotBlank()) {
+                    _state.value.copy(
+                        isShowButton = true
+                    )
+                        .updateState()
+                }
             }
         }
     }
