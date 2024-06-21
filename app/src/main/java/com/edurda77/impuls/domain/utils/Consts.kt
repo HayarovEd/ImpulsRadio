@@ -18,6 +18,7 @@ const val RADIO_URL = "radio_url"
 const val RADIO_TRACK = "radio_track"
 const val RADIO_NAME = "radio_name"
 const val SESSION_ID = "session_id"
+const val IS_PLAY = "is_play"
 
 const val DB = "radio_db"
 const val RADIO_TABLE = "radio_table"

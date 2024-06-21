@@ -10,4 +10,5 @@ interface DataStoreRepository {
     suspend fun setRadioName(name: String)
     fun readRadioName(): Flow<String>
     fun readSessionId(): Flow<Int>
+    fun readIsPlay(): Flow<Boolean>
 }

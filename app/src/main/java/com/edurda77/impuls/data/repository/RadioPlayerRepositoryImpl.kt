@@ -103,6 +103,7 @@ class RadioPlayerRepositoryImpl @Inject constructor(
 
         controllerFuture.addListener(
             {
+
                 val mediaPlayer = controllerFuture.get()
                 mediaPlayer.setMediaItem(mediaItem)
                 mediaPlayer.prepare()

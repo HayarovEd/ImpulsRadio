@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -39,11 +40,13 @@ class MainViewModel @Inject constructor(
     }
 
     private fun checkIsPlayed() {
-        radioPlayerRepository.checkPlayRadio {
-            _state.value.copy(
-                isPlayed = it
-            )
-                .updateState()
+        viewModelScope.launch {
+            dataStoreRepository.readIsPlay().collect { isServicePlay ->
+                _state.value.copy(
+                    isPlayed = isServicePlay
+                )
+                    .updateState()
+            }
         }
     }
 

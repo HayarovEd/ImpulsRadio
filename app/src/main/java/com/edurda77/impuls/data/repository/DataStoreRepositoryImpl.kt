@@ -4,11 +4,13 @@ import android.app.Application
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.edurda77.impuls.domain.repository.DataStoreRepository
+import com.edurda77.impuls.domain.utils.IS_PLAY
 import com.edurda77.impuls.domain.utils.RADIO_NAME
 import com.edurda77.impuls.domain.utils.RADIO_TRACK
 import com.edurda77.impuls.domain.utils.RADIO_URL
@@ -69,11 +71,18 @@ class DataStoreRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun readIsPlay(): Flow<Boolean> {
+        return application.dataStore.data.map {
+            it[FIELD_IS_PLAY]?: false
+        }
+    }
+
 
     companion object {
         val FIELD_RADIO_URL = stringPreferencesKey(RADIO_URL)
         val FIELD_RADIO_TRACK = stringPreferencesKey(RADIO_TRACK)
         val FIELD_RADIO_NAME = stringPreferencesKey(RADIO_NAME)
         val FIELD_SESSION_ID = intPreferencesKey(SESSION_ID)
+        val FIELD_IS_PLAY = booleanPreferencesKey(IS_PLAY)
     }
 }
