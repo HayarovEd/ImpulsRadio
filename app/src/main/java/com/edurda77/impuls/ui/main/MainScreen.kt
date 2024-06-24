@@ -55,7 +55,7 @@ fun MainScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
-            if (state.value.sessionId != 0) {
+            if (state.value.sessionId != 0&&state.value.isPlayed) {
                 SquareBarVisualizerRelease(
                     audioSessionId = state.value.sessionId
                 )
