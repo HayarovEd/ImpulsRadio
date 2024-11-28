@@ -5,7 +5,6 @@ const val POST_URL_CAT = "api.php?a=cats"
 const val POST_URL_RADIOS = "api.php?a=channel&c="
 const val PARSER_URL = "https://radio.impulsfm.ru/parser.php"
 
-const val UNKNOWN_ERROR = "Неизвестная ошибка"
 
 const val MAIN_SCREEN = "main"
 const val PROVINCE_SCREEN = "province"

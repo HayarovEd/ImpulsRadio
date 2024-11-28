@@ -31,14 +31,13 @@ import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
 import com.edurda77.impuls.R
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_IS_PLAY
-import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_NAME
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_TRACK
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_URL
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_SESSION_ID
 import com.edurda77.impuls.data.repository.dataStore
+import com.edurda77.impuls.domain.utils.DataError
 import com.edurda77.impuls.domain.utils.PARSER_URL
-import com.edurda77.impuls.domain.utils.Resource
-import com.edurda77.impuls.domain.utils.UNKNOWN_ERROR
+import com.edurda77.impuls.domain.utils.ResultWork
 import com.edurda77.impuls.ui.MainActivity
 import com.google.common.collect.ImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -47,7 +46,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
+import java.net.UnknownHostException
 
 
 @UnstableApi
@@ -106,23 +107,18 @@ class MusicPlayerService : MediaSessionService() {
                 .dataStore
                 .data
                 .map {mapped->
-                    //Log.d("TEST REMOTE SERVICE DATA", "get radio ${mapped[FIELD_RADIO_URL]}")
                      mapped[FIELD_RADIO_URL] ?: ""
-                    //Log.d("TEST REMOTE SERVICE DATA", "get radio a  $a")
                 }.collect { collected ->
-                    //Log.d("TEST REMOTE SERVICE DATA", "radio $collected")
                     while (true) {
                         when (val result = getMetaData(collected)) {
-                            is Resource.Error -> {
-                                //Log.d("TEST REMOTE SERVICE DATA", "error ${result.message}")
+                            is ResultWork.Error -> {
                             }
 
-                            is Resource.Success -> {
-                                if (!result.data.isNullOrBlank()) {
+                            is ResultWork.Success -> {
+                                if (result.data.isNotBlank()) {
                                     application.dataStore.edit { settings ->
                                         settings[FIELD_RADIO_TRACK] = result.data
                                     }
-                                    //Log.d("TEST REMOTE SERVICE DATA", "body ${result.data}")
                                 }
                             }
                         }
@@ -195,7 +191,7 @@ class MusicPlayerService : MediaSessionService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
 
-    private suspend fun getMetaData(radioUrl: String): Resource<String> {
+    private suspend fun getMetaData(radioUrl: String): ResultWork<String, DataError.Network> {
         return try {
             withContext(Dispatchers.IO)
             {
@@ -206,11 +202,20 @@ class MusicPlayerService : MediaSessionService() {
                     .post()
                 val body = doc.body().html()
                 Log.d("TEST REMOTE DATA", "body $body")
-                Resource.Success(body)
+                ResultWork.Success(body)
             }
-        } catch (error: Exception) {
-            error.printStackTrace()
-            Resource.Error(message = error.localizedMessage ?: UNKNOWN_ERROR)
+        } catch (e: HttpStatusException) {
+            when (e.statusCode) {
+                in 400..499 -> ResultWork.Error(DataError.Network.BAD_REQUEST)
+                in 500..599 -> ResultWork.Error(DataError.Network.SERVER_ERROR)
+                else -> ResultWork.Error(DataError.Network.UNKNOWN)
+            }
+        } catch (e: UnknownHostException) {
+            e.printStackTrace()
+            ResultWork.Error(DataError.Network.NO_INTERNET)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ResultWork.Error(DataError.Network.UNKNOWN)
         }
     }
 

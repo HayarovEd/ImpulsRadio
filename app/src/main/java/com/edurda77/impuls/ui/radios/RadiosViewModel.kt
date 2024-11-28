@@ -1,6 +1,5 @@
 package com.edurda77.impuls.ui.radios
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,7 +7,7 @@ import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
 import com.edurda77.impuls.domain.repository.RemoteRepository
-import com.edurda77.impuls.domain.utils.Resource
+import com.edurda77.impuls.domain.utils.ResultWork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,17 +65,16 @@ class RadiosViewModel @Inject constructor(
             )
                 .updateState()
             when (val result = remoteRepository.getRadioByProvince(idProvince = id)) {
-                is Resource.Error -> {
-                    Log.d("TEST REMOTE DATA", "error ${result.message}")
+                is ResultWork.Error -> {
                     _state.value.copy(
                         isLoading = false
                     )
                         .updateState()
                 }
 
-                is Resource.Success -> {
+                is ResultWork.Success -> {
                     _state.value.copy(
-                        radios = result.data ?: emptyList(),
+                        radios = result.data,
                         isLoading = false
                     )
                         .updateState()

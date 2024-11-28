@@ -1,10 +1,9 @@
 package com.edurda77.impuls.ui.provinces
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edurda77.impuls.domain.repository.RemoteRepository
-import com.edurda77.impuls.domain.utils.Resource
+import com.edurda77.impuls.domain.utils.ResultWork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,14 +28,14 @@ class ProvinesViewModel @Inject constructor(
 
     private fun getProvinces() {
         viewModelScope.launch {
-            when (val result = remoteRepository.getProvincies()) {
-                is Resource.Error -> {
-                    Log.d("TEST REMOTE DATA", "error ${result.message}")
+            when (val result = remoteRepository.getProvinces()) {
+                is ResultWork.Error -> {
+
                 }
 
-                is Resource.Success -> {
+                is ResultWork.Success -> {
                     _state.value.copy(
-                        provinces = result.data ?: emptyList()
+                        provinces = result.data
                     )
                         .updateState()
                 }

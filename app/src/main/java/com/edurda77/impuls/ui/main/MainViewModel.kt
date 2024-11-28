@@ -1,18 +1,15 @@
 package com.edurda77.impuls.ui.main
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
-import com.edurda77.impuls.domain.repository.RemoteRepository
-import com.edurda77.impuls.domain.utils.Resource
+import com.edurda77.impuls.domain.utils.ResultWork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,7 +29,6 @@ class MainViewModel @Inject constructor(
     init {
         getRadioUrl()
         getRadioName()
-        //getTrack()
         getMetaData()
         getSessionId()
         getLastRadios()
@@ -82,13 +78,13 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             cacheRepository.getAllData().collect { collector ->
                 when (collector) {
-                    is Resource.Error -> {
+                    is ResultWork.Error -> {
 
                     }
 
-                    is Resource.Success -> {
+                    is ResultWork.Success -> {
                         _state.value.copy(
-                            lastRadio = collector.data?.takeLast(2) ?: emptyList()
+                            lastRadio = collector.data.takeLast(2)
                         )
                             .updateState()
                     }
@@ -112,14 +108,13 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             while (true) {
                 when (val result = radioPlayerRepository.getMetaData(_state.value.radioUrl)) {
-                    is Resource.Error -> {
+                    is ResultWork.Error -> {
 
                     }
 
-                    is Resource.Success -> {
-                        Log.d("TEST REMOTE DATA1", "current track ${result.data}")
+                    is ResultWork.Success -> {
                         _state.value.copy(
-                            track = result.data ?: ""
+                            track = result.data
                         )
                             .updateState()
                     }

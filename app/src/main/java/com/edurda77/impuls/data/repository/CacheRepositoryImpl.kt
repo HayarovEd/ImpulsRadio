@@ -5,8 +5,8 @@ import com.edurda77.impuls.data.local.RadioEntity
 import com.edurda77.impuls.data.mapper.convertToRadios
 import com.edurda77.impuls.domain.model.RadioStation
 import com.edurda77.impuls.domain.repository.CacheRepository
-import com.edurda77.impuls.domain.utils.Resource
-import com.edurda77.impuls.domain.utils.UNKNOWN_ERROR
+import com.edurda77.impuls.domain.utils.DataError
+import com.edurda77.impuls.domain.utils.ResultWork
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
@@ -19,25 +19,30 @@ class CacheRepositoryImpl @Inject constructor(
     override suspend fun insertRadio(
         name:String,
         url:String,
-    ) {
-        dao.insertRadio(
-            RadioEntity(
-                name = name,
-                url = url,
-                time = System.currentTimeMillis()
+    ): ResultWork<Unit, DataError.LocalDataError> {
+        return try {
+            dao.insertRadio(
+                RadioEntity(
+                    name = name,
+                    url = url,
+                    time = System.currentTimeMillis()
+                )
             )
-        )
+            ResultWork.Success(Unit)
+        } catch (error: Exception) {
+            ResultWork.Error(DataError.LocalDataError.ERROR_WRITE_DATA)
+        }
     }
 
-    override suspend fun getAllData(): Flow<Resource<List<RadioStation>>> {
+    override suspend fun getAllData(): Flow<ResultWork<List<RadioStation>, DataError.LocalDataError>> {
         return flow {
             try {
                 val result = dao.getLastData()
                 result.collect { radios ->
-                    emit(Resource.Success(radios.convertToRadios()))
+                    emit(ResultWork.Success(radios.convertToRadios()))
                 }
             } catch (error: Exception) {
-                emit(Resource.Error(error.localizedMessage ?: UNKNOWN_ERROR))
+                emit(ResultWork.Error(DataError.LocalDataError.ERROR_READ_DATA))
             }
         }
     }
