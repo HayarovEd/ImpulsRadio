@@ -6,6 +6,9 @@ import com.edurda77.impuls.domain.utils.ResultWork
 import kotlinx.coroutines.flow.Flow
 
 interface CacheRepository {
-    suspend fun insertRadio(name: String, url: String): ResultWork<Unit, DataError.LocalDataError>
+    suspend fun insertRadio(
+        name: String,
+        url: String,
+        provinceId: Int): ResultWork<Unit, DataError.LocalDataError>
     suspend fun getAllData(): Flow<ResultWork<List<RadioStation>, DataError.LocalDataError>>
 }

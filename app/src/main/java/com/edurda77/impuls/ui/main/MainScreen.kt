@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -72,11 +73,13 @@ fun MainScreen(
     }
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = blue34,
         snackbarHost = { SnackbarHost(snakeBarHostState) },
         topBar = {
             if (!state.value.isEnableInternet) {
                 Text(
                     modifier = modifier
+                        .statusBarsPadding()
                         .fillMaxWidth()
                         .background(color = Pink40),
                     text = stringResource(R.string.not_internet),
@@ -101,8 +104,7 @@ fun MainScreen(
             modifier = modifier
                 .padding(paddings)
                 .fillMaxSize()
-                .background(color = blue34)
-                .padding(15.dp),
+                .padding(horizontal = 15.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(

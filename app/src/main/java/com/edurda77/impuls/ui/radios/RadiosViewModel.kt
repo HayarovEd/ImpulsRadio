@@ -45,7 +45,8 @@ class RadiosViewModel @Inject constructor(
                     )
                     cacheRepository.insertRadio(
                         name = radiosEvent.name,
-                        url = radiosEvent.url
+                        url = radiosEvent.url,
+                        provinceId = -1
                     )
                 }
             }

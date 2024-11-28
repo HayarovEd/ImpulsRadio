@@ -11,8 +11,12 @@ import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.edurda77.impuls.data.local.RadioDatabase
 import com.edurda77.impuls.domain.utils.DB
+import com.edurda77.impuls.domain.utils.RADIO_TABLE
+import com.edurda77.impuls.domain.utils.RADIO_TABLE_PROVINCE
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -56,7 +60,14 @@ object ApiModule {
             RadioDatabase::class.java,
             DB
         )
+            .addMigrations(migration1to2)
             .build()
     }
 
+    private val migration1to2 = object : Migration(1, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE $RADIO_TABLE ADD COLUMN $RADIO_TABLE_PROVINCE INTEGER NOT NULL DEFAULT '-1'")
+           // db.execSQL("UPDATE $COMPANY_IS_FAVORITE SET $NAME_FAVORITE =(SELECT $SHORT_NAME FROM $COMPANY_CACHE WHERE $COMPANY_CACHE.$SEC_ID = $COMPANY_IS_FAVORITE.$SEC_ID)")
+        }
+    }
 }

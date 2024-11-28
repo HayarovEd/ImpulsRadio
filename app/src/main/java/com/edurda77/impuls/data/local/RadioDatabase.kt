@@ -6,7 +6,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [RadioEntity::class],
-    version = 1
+    version = 2
 )
 abstract class RadioDatabase : RoomDatabase() {
     abstract val radioDao: RadioDao

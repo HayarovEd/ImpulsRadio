@@ -19,12 +19,14 @@ class CacheRepositoryImpl @Inject constructor(
     override suspend fun insertRadio(
         name:String,
         url:String,
+        provinceId: Int
     ): ResultWork<Unit, DataError.LocalDataError> {
         return try {
             dao.insertRadio(
                 RadioEntity(
                     name = name,
                     url = url,
+                    provinceId = provinceId,
                     time = System.currentTimeMillis()
                 )
             )
