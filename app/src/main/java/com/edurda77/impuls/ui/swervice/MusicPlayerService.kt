@@ -30,6 +30,7 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
 import com.edurda77.impuls.R
+import com.edurda77.impuls.data.handler.handleResponse
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_IS_PLAY
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_TRACK
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_URL
@@ -192,30 +193,16 @@ class MusicPlayerService : MediaSessionService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
 
     private suspend fun getMetaData(radioUrl: String): ResultWork<String, DataError.Network> {
-        return try {
-            withContext(Dispatchers.IO)
-            {
+        return withContext(Dispatchers.IO)  {
+            handleResponse {
                 val doc = Jsoup.connect(PARSER_URL)
                     .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0")
                     .data("text", radioUrl)
                     .post()
                 val body = doc.body().html()
-                Log.d("TEST REMOTE DATA", "body $body")
-                ResultWork.Success(body)
+                body
             }
-        } catch (e: HttpStatusException) {
-            when (e.statusCode) {
-                in 400..499 -> ResultWork.Error(DataError.Network.BAD_REQUEST)
-                in 500..599 -> ResultWork.Error(DataError.Network.SERVER_ERROR)
-                else -> ResultWork.Error(DataError.Network.UNKNOWN)
-            }
-        } catch (e: UnknownHostException) {
-            e.printStackTrace()
-            ResultWork.Error(DataError.Network.NO_INTERNET)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResultWork.Error(DataError.Network.UNKNOWN)
         }
     }
 
