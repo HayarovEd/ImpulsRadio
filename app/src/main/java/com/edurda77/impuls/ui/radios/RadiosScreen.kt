@@ -94,7 +94,6 @@ fun RadiosScreen(
                 items(state.value.radios) {
                     ItemElement(
                         name = it.name,
-                        isCenter = false,
                         onClick = {
                             onEvent(
                                 RadiosEvent.OnPlay(

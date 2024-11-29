@@ -22,27 +22,16 @@ fun NavController(
     NavHost(navController = navController, startDestination = startDestination) {
         composable(NavigationDestination.MainScreenDestination.destination) {
             MainScreen(
-                navController = navController
+                onNavigateToProvince = {
+                    navController.navigate(PROVINCE_SCREEN)
+                }
             )
         }
         composable(NavigationDestination.ProvincesScreenDestination.destination) {
             ProvincesScreen(
-                navController = navController
-            )
-        }
-        composable(
-            NavigationDestination.RadiosScreenDestination.destination,
-            arguments = listOf(
-                navArgument("id") {
-                    type = NavType.IntType
-                },
-                navArgument("name") {
-                    type = NavType.StringType
-                },
-            )
-        ) {
-            RadiosScreen(
-                navController = navController
+                onNavigateBack = {
+                    navController.navigateUp()
+                }
             )
         }
     }

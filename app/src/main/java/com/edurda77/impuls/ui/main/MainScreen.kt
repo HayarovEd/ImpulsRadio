@@ -42,9 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.edurda77.impuls.R
-import com.edurda77.impuls.domain.utils.PROVINCE_SCREEN
 import com.edurda77.impuls.ui.theme.Pink40
 import com.edurda77.impuls.ui.theme.blue34
 import com.edurda77.impuls.ui.theme.blue53
@@ -56,7 +54,7 @@ import com.edurda77.impuls.ui.uikit.SquareBarVisualizerRelease
 fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel = hiltViewModel(),
-    navController: NavHostController
+    onNavigateToProvince: () -> Unit,
 ) {
     val state = viewModel.state.collectAsState()
     val onEvent = viewModel::onEvent
@@ -165,7 +163,7 @@ fun MainScreen(
                     containerColor = blue53
                 ),
                 enabled = state.value.isEnableInternet,
-                onClick = { navController.navigate(PROVINCE_SCREEN) }) {
+                onClick = onNavigateToProvince) {
                 Text(
                     text = stringResource(R.string.choise_radio),
                     style = TextStyle(
@@ -195,7 +193,6 @@ fun MainScreen(
                     items(state.value.lastRadio) {
                         ItemElement(
                             name = it.name,
-                            isCenter = false,
                             onClick = {
                                 onEvent(
                                     MainEvent.OnPlay(

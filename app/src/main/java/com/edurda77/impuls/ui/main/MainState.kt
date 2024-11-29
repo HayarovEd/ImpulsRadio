@@ -13,5 +13,5 @@ data class MainState (
     val track: String = "",
     val isPlayed: Boolean = false,
     val isShowButton: Boolean = false,
-    val isEnableInternet:Boolean = false,
+    val isEnableInternet:Boolean = true,
 )

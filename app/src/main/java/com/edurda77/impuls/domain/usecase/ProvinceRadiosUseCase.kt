@@ -6,6 +6,7 @@ import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RemoteRepository
 import com.edurda77.impuls.domain.utils.DataError
+import com.edurda77.impuls.domain.utils.MILLS_IN_DAY
 import com.edurda77.impuls.domain.utils.ResultWork
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -20,15 +21,15 @@ class ProvinceRadiosUseCase @Inject constructor(
         isRefresh: Boolean,
     ): Flow<ResultWork<List<UiProvince>, DataError>> {
 
-            val flow1 = cacheRepository.getAllProvincies()
-            val flow2 = dataStoreRepository.readDateUpdate()
-            return flow1.combine(flow2) { cache, dateStamp->
+            val flowProvinces = cacheRepository.getAllProvincies()
+            val flowDateStamp = dataStoreRepository.readDateUpdate()
+            return flowProvinces.combine(flowDateStamp) { cache, dateStamp->
                 when (cache) {
                     is ResultWork.Error -> {
                         ResultWork.Error(cache.error)
                     }
                     is ResultWork.Success -> {
-                        if (cache.data.isEmpty()||isRefresh) {
+                        if (cache.data.isEmpty()||isRefresh||dateStamp+MILLS_IN_DAY<System.currentTimeMillis()) {
                             when (val remoteData = getRemoteData()) {
                                 is ResultWork.Error -> {
                                     ResultWork.Error(remoteData.error)
@@ -44,30 +45,6 @@ class ProvinceRadiosUseCase @Inject constructor(
                     }
                 }
             }
-            /*cacheRepository.getAllProvincies().collect { collector->
-                when (collector) {
-                    is ResultWork.Error -> {
-                        emit(ResultWork.Error(collector.error))
-                    }
-                    is ResultWork.Success -> {
-                        if (collector.data.isEmpty()||isRefresh) {
-                            when (val remoteData = getRemoteData()) {
-                                is ResultWork.Error -> {
-                                    emit(ResultWork.Error(remoteData.error))
-                                }
-                                is ResultWork.Success -> {
-                                    emit(ResultWork.Success(remoteData.data))
-                                }
-                            }
-
-                        } else {
-                            emit(ResultWork.Success(collector.data))
-                        }
-                    }
-                }
-            }*/
-
-
     }
 
     private suspend fun getRemoteData(): ResultWork<List<UiProvince>, DataError> {
