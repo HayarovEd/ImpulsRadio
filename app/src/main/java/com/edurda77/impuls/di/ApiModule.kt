@@ -15,8 +15,15 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.edurda77.impuls.data.local.RadioDatabase
 import com.edurda77.impuls.domain.utils.DB
-import com.edurda77.impuls.domain.utils.RADIO_TABLE
+import com.edurda77.impuls.domain.utils.PROVINCE_ID
+import com.edurda77.impuls.domain.utils.PROVINCE_NAME
+import com.edurda77.impuls.domain.utils.PROVINCE_TABLE
+import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_NAME
 import com.edurda77.impuls.domain.utils.RADIO_TABLE_PROVINCE
+import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_TABLE
+import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_TIME
+import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_URL
+import com.edurda77.impuls.domain.utils.RADIO_TABLE
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -67,7 +74,8 @@ object ApiModule {
     private val migration1to2 = object : Migration(1, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE $RADIO_TABLE ADD COLUMN $RADIO_TABLE_PROVINCE INTEGER NOT NULL DEFAULT '-1'")
-           // db.execSQL("UPDATE $COMPANY_IS_FAVORITE SET $NAME_FAVORITE =(SELECT $SHORT_NAME FROM $COMPANY_CACHE WHERE $COMPANY_CACHE.$SEC_ID = $COMPANY_IS_FAVORITE.$SEC_ID)")
+            db.execSQL("CREATE TABLE $PROVINCE_TABLE($PROVINCE_ID INTEGER PRIMARY KEY NOT NULL, $PROVINCE_NAME TEXT NOT NULL)")
+            db.execSQL("CREATE TABLE $RADIO_PROVINCE_TABLE($RADIO_TABLE_PROVINCE INTEGER PRIMARY KEY NOT NULL, $RADIO_PROVINCE_NAME TEXT NOT NULL, $RADIO_PROVINCE_URL TEXT NOT NULL, $RADIO_PROVINCE_TIME INTEGER NOT NULL)")
         }
     }
 }

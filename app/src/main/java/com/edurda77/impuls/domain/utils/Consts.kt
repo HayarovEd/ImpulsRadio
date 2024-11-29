@@ -18,10 +18,22 @@ const val RADIO_TRACK = "radio_track"
 const val RADIO_NAME = "radio_name"
 const val SESSION_ID = "session_id"
 const val IS_PLAY = "is_play"
+const val DATE_UPDATE = "date_update"
 
 const val DB = "radio_db"
 const val RADIO_TABLE = "radio_table"
 const val RADIO_TABLE_NAME = "radio_name"
 const val RADIO_TABLE_URL = "radio_url"
 const val RADIO_TABLE_TIME = "time_stamp"
+
+const val PROVINCE_TABLE = "province_table"
+const val PROVINCE_ID = "province_id"
+const val PROVINCE_NAME = "province_name"
+
+const val RADIO_PROVINCE_TABLE = "radio_province_table"
+const val RADIO_PROVINCE_NAME = "radio_name"
+const val RADIO_PROVINCE_URL = "radio_url"
+const val RADIO_PROVINCE_TIME = "time_stamp"
 const val RADIO_TABLE_PROVINCE = "province_id"
+
+const val MILLS_IN_DAY = 86400000

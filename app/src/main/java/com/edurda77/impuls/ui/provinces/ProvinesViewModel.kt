@@ -3,6 +3,8 @@ package com.edurda77.impuls.ui.provinces
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edurda77.impuls.domain.repository.RemoteRepository
+import com.edurda77.impuls.domain.repository.ServiceRepository
+import com.edurda77.impuls.domain.usecase.ProvinceRadiosUseCase
 import com.edurda77.impuls.domain.utils.ResultWork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ProvinesViewModel @Inject constructor(
     private val remoteRepository: RemoteRepository,
+    private val provinceRadiosUseCase: ProvinceRadiosUseCase,
+    private val serviceRepository: ServiceRepository,
 ) : ViewModel() {
 
     private var _state = MutableStateFlow(ProvinceState())
@@ -23,6 +27,23 @@ class ProvinesViewModel @Inject constructor(
 
     init {
         getProvinces()
+        getNewProvinces()
+    }
+
+    private fun getNewProvinces() {
+        viewModelScope.launch {
+            provinceRadiosUseCase.invoke(true).collect{
+                when (it) {
+                    is ResultWork.Error -> {}
+                    is ResultWork.Success -> {
+                        _state.value.copy(
+                            provinces = it.data
+                        )
+                            .updateState()
+                    }
+                }
+            }
+        }
     }
 
 
@@ -34,10 +55,7 @@ class ProvinesViewModel @Inject constructor(
                 }
 
                 is ResultWork.Success -> {
-                    _state.value.copy(
-                        provinces = result.data
-                    )
-                        .updateState()
+
                 }
             }
         }

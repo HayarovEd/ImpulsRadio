@@ -99,7 +99,8 @@ fun RadiosScreen(
                             onEvent(
                                 RadiosEvent.OnPlay(
                                     name = it.name,
-                                    url = it.url
+                                    url = it.url,
+                                    provinceId = it.provinceId
                                 )
                             )
                             navController.navigate(MAIN_SCREEN)

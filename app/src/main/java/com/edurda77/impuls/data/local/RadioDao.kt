@@ -4,6 +4,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
+import com.edurda77.impuls.domain.utils.PROVINCE_TABLE
+import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_TABLE
 import com.edurda77.impuls.domain.utils.RADIO_TABLE
 import kotlinx.coroutines.flow.Flow
 
@@ -16,5 +19,22 @@ interface RadioDao {
     @Query("SELECT * FROM $RADIO_TABLE")
     fun getLastData(): Flow<List<RadioEntity>>
 
+    @Upsert
+    suspend fun insertRadioProvince(radioProvinceEntity: RadioProvinceEntity)
+
+    @Query("SELECT * FROM $RADIO_PROVINCE_TABLE")
+    fun getRadiosProvince(): Flow<List<RadioProvinceEntity>>
+
+    @Query("DELETE FROM $RADIO_PROVINCE_TABLE")
+    suspend fun clearRadiosProvince()
+
+    @Upsert
+    suspend fun insertProvince(provinceEntity: ProvinceEntity)
+
+    @Query("SELECT * FROM $PROVINCE_TABLE")
+    fun getProvincies(): Flow<List<ProvinceEntity>>
+
+    @Query("DELETE FROM $PROVINCE_TABLE")
+    suspend fun clearProvincies()
 
 }

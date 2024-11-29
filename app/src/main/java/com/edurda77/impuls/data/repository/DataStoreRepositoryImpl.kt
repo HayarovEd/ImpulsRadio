@@ -7,9 +7,11 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.edurda77.impuls.domain.repository.DataStoreRepository
+import com.edurda77.impuls.domain.utils.DATE_UPDATE
 import com.edurda77.impuls.domain.utils.IS_PLAY
 import com.edurda77.impuls.domain.utils.RADIO_NAME
 import com.edurda77.impuls.domain.utils.RADIO_TRACK
@@ -77,6 +79,18 @@ class DataStoreRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun setDateUpdate(dateStamp: Long) {
+        application.dataStore.edit { settings ->
+            settings[FIELD_DATE_UPDATE] = dateStamp
+        }
+    }
+
+    override fun readDateUpdate(): Flow<Long> {
+        return application.dataStore.data.map {
+            it[FIELD_DATE_UPDATE]?: System.currentTimeMillis()
+        }
+    }
+
 
     companion object {
         val FIELD_RADIO_URL = stringPreferencesKey(RADIO_URL)
@@ -84,5 +98,6 @@ class DataStoreRepositoryImpl @Inject constructor(
         val FIELD_RADIO_NAME = stringPreferencesKey(RADIO_NAME)
         val FIELD_SESSION_ID = intPreferencesKey(SESSION_ID)
         val FIELD_IS_PLAY = booleanPreferencesKey(IS_PLAY)
+        val FIELD_DATE_UPDATE = longPreferencesKey(DATE_UPDATE)
     }
 }

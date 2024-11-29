@@ -36,7 +36,7 @@ class RemoteRepositoryImpl @Inject constructor() : RemoteRepository {
             handleResponse {
                 val doc = Jsoup.connect(BASE_URL + POST_URL_RADIOS + idProvince.toString()).get()
                 val body = doc.body().html()
-                val radios = body.convertToRadios()
+                val radios = body.convertToRadios(idProvince)
                 radios
             }
         }
