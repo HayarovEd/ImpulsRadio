@@ -7,9 +7,11 @@ import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
 import com.edurda77.impuls.domain.repository.ServiceRepository
 import com.edurda77.impuls.domain.usecase.ProvinceRadiosUseCase
+import com.edurda77.impuls.domain.usecase.RefreshProvinceRadiosUseCase
 import com.edurda77.impuls.domain.utils.ResultWork
 import com.edurda77.impuls.ui.uikit.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -20,6 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProvincesViewModel @Inject constructor(
     private val provinceRadiosUseCase: ProvinceRadiosUseCase,
+    private val refreshProvinceRadiosUseCase: RefreshProvinceRadiosUseCase,
     private val serviceRepository: ServiceRepository,
     private val dataStoreRepository: DataStoreRepository,
     private val cacheRepository: CacheRepository,
@@ -31,7 +34,7 @@ class ProvincesViewModel @Inject constructor(
 
 
     init {
-        getProvinces(false)
+        getProvinces()
         checkEnableInternet()
     }
 
@@ -54,8 +57,29 @@ class ProvincesViewModel @Inject constructor(
             }
 
             ProvinceEvent.OnRefresh -> {
-                if (state.value.isEnableInternet) {
-                    getProvinces(isRefresh = true)
+                _state.value.copy(
+                    isLoading = true
+                )
+                    .updateState()
+                viewModelScope.launch {
+                    delay(1000)
+                    if (state.value.isEnableInternet) {
+                        when (val result = refreshProvinceRadiosUseCase.invoke(state.value.provinces)) {
+                            is ResultWork.Error -> {
+                                _state.value.copy(
+                                    isLoading = false,
+                                    message = result.error.asUiText()
+                                )
+                                    .updateState()
+                            }
+                            is ResultWork.Success -> {
+                                _state.value.copy(
+                                    isLoading = false,
+                                )
+                                    .updateState()
+                            }
+                        }
+                    }
                 }
             }
 
@@ -71,13 +95,13 @@ class ProvincesViewModel @Inject constructor(
         }
     }
 
-    private fun getProvinces(isRefresh: Boolean) {
+    private fun getProvinces() {
         _state.value.copy(
             isLoading = true
         )
             .updateState()
         viewModelScope.launch {
-            provinceRadiosUseCase.invoke(isRefresh).collect{
+            provinceRadiosUseCase.invoke().collect {
                 when (it) {
                     is ResultWork.Error -> {
                         _state.value.copy(
@@ -86,6 +110,7 @@ class ProvincesViewModel @Inject constructor(
                         )
                             .updateState()
                     }
+
                     is ResultWork.Success -> {
                         _state.value.copy(
                             isLoading = false,
