@@ -8,7 +8,7 @@ import com.edurda77.impuls.domain.repository.RemoteRepository
 import com.edurda77.impuls.domain.utils.DataError
 import com.edurda77.impuls.domain.utils.ResultWork
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class ProvinceRadiosUseCase @Inject constructor(
@@ -16,29 +16,15 @@ class ProvinceRadiosUseCase @Inject constructor(
     private val cacheRepository: CacheRepository,
     private val dataStoreRepository: DataStoreRepository,
 ) {
-    suspend operator fun invoke(
+    operator fun invoke(
         isRefresh: Boolean,
     ): Flow<ResultWork<List<UiProvince>, DataError>> {
-
-        val flowProvinces = cacheRepository.getAllProvincies()
-        val flowDateStamp = dataStoreRepository.readDateUpdate()
-        return flowProvinces.combine(flowDateStamp) { cache, dateStamp ->
-            when (cache) {
-                is ResultWork.Error -> {
-                    getRemoteData()
-                }
-
-                is ResultWork.Success -> {
-                    if (cache.data.isEmpty() || isRefresh) {
-                        getRemoteData()
-                    } else {
-                       /* if (dateStamp + MILLS_IN_DAY < System.currentTimeMillis()) {
-                            getRemoteData()
-                        } else {
-                            ResultWork.Success(cache.data)
-                        }*/
-                        ResultWork.Success(cache.data)
-                    }
+        return flow {
+            cacheRepository.getAllProvincies().collect { collector ->
+                if (collector.isEmpty() || isRefresh) {
+                    emit(getRemoteData())
+                } else {
+                    emit(ResultWork.Success(collector))
                 }
             }
         }

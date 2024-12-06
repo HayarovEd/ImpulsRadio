@@ -22,5 +22,10 @@ interface CacheRepository {
     suspend fun insertProvince(name: String, id: Int): ResultWork<Unit, DataError.LocalDataError>
     suspend fun clearProvince(): ResultWork<Unit, DataError.LocalDataError>
     //suspend fun getAllRadiosProvince(): Flow<ResultWork<List<RadioStation>, DataError.LocalDataError>>
-    suspend fun getAllProvincies(): Flow<ResultWork<List<UiProvince>, DataError.LocalDataError>>
+    suspend fun getAllProvincies(): Flow<List<UiProvince>>
+    suspend fun updateProvince(
+        name: String,
+        id: Int,
+        isExpanded: Boolean
+    ): ResultWork<Unit, DataError.LocalDataError>
 }

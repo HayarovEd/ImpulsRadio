@@ -116,12 +116,13 @@ fun List<RadioProvinceEntity>.radioProvinceEntityConvertToRadios(): List<RadioSt
     }
 }
 
-fun List<ProvinceEntity>.convertToProvincies(radioEntities: List<RadioProvinceEntity>): List<UiProvince> {
+fun List<ProvinceEntity>.convertToProvinces(radioEntities: List<RadioProvinceEntity>): List<UiProvince> {
     val radios = radioEntities.radioProvinceEntityConvertToRadios()
     return this.map { provinceEntity ->
         UiProvince(
             name = provinceEntity.name,
             id = provinceEntity.id,
+            isExpandedRadios = provinceEntity.isExpanded,
             radios = radios.filter { it.provinceId == provinceEntity.id }
         )
     }

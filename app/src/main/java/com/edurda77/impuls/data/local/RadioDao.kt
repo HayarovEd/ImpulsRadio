@@ -32,7 +32,7 @@ interface RadioDao {
     suspend fun insertProvince(provinceEntity: ProvinceEntity)
 
     @Query("SELECT * FROM $PROVINCE_TABLE")
-    fun getProvincies(): Flow<List<ProvinceEntity>>
+    fun getProvinces(): Flow<List<ProvinceEntity>>
 
     @Query("DELETE FROM $PROVINCE_TABLE")
     suspend fun clearProvincies()

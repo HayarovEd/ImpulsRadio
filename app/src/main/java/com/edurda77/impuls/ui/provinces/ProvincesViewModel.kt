@@ -58,6 +58,16 @@ class ProvincesViewModel @Inject constructor(
                     getProvinces(isRefresh = true)
                 }
             }
+
+            is ProvinceEvent.UpdateExpandedProvince -> {
+                viewModelScope.launch {
+                    cacheRepository.updateProvince(
+                        name = event.province.name,
+                        id = event.province.id,
+                        isExpanded = !event.province.isExpandedRadios
+                    )
+                }
+            }
         }
     }
 

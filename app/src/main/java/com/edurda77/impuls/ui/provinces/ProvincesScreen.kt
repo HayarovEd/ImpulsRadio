@@ -2,6 +2,7 @@ package com.edurda77.impuls.ui.provinces
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -159,6 +160,9 @@ fun ProvincesScreen(
                                     modifier = modifier
                                         .fillMaxWidth()
                                         .background(color = white)
+                                        .clickable {
+                                            onEvent(ProvinceEvent.UpdateExpandedProvince(province))
+                                        }
                                         .padding(10.dp),
                                     horizontalAlignment = Alignment.Start
                                 ) {
@@ -174,22 +178,24 @@ fun ProvincesScreen(
                                     )
                                 }
                             }
-                            items(province.radios) { radio ->
-                                ItemElement(
-                                    name = radio.name,
-                                    onClick = {
-                                        if (state.value.isEnableInternet) {
-                                            onEvent(
-                                                ProvinceEvent.OnPlay(
-                                                    name = radio.name,
-                                                    url = radio.url,
-                                                    provinceId = radio.provinceId
+                            if (province.isExpandedRadios) {
+                                items(province.radios) { radio ->
+                                    ItemElement(
+                                        name = radio.name,
+                                        onClick = {
+                                            if (state.value.isEnableInternet) {
+                                                onEvent(
+                                                    ProvinceEvent.OnPlay(
+                                                        name = radio.name,
+                                                        url = radio.url,
+                                                        provinceId = radio.provinceId
+                                                    )
                                                 )
-                                            )
+                                            }
+                                            onNavigateBack()
                                         }
-                                        onNavigateBack()
-                                    }
-                                )
+                                    )
+                                }
                             }
                         }
                     }
