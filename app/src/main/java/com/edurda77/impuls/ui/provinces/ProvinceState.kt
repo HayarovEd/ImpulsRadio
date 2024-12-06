@@ -5,7 +5,7 @@ import com.edurda77.impuls.ui.uikit.UiText
 
 data class ProvinceState (
     val provinces: List<UiProvince> = emptyList(),
-    val isEnableInternet:Boolean = true,
+    val isEnableInternet:Boolean = false,
     val message : UiText? = null,
     val isLoading: Boolean = false,
 )

@@ -6,6 +6,7 @@ import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
 import com.edurda77.impuls.domain.repository.ServiceRepository
+import com.edurda77.impuls.domain.utils.READ_ERROR_TRACK
 import com.edurda77.impuls.domain.utils.ResultWork
 import com.edurda77.impuls.ui.uikit.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -128,7 +129,7 @@ class MainViewModel @Inject constructor(
                 when (val result = radioPlayerRepository.getMetaData(_state.value.radioUrl)) {
                     is ResultWork.Error -> {
                         _state.value.copy(
-                            message = result.error.asUiText()
+                            track = READ_ERROR_TRACK
                         )
                             .updateState()
                     }

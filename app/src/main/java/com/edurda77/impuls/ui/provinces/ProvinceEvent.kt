@@ -6,4 +6,5 @@ sealed class ProvinceEvent {
         val url: String,
         val provinceId: Int
     ):ProvinceEvent()
+    data object OnRefresh: ProvinceEvent()
 }

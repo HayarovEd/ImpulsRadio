@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edurda77.impuls.R
+import com.edurda77.impuls.domain.utils.READ_ERROR_TRACK
 import com.edurda77.impuls.ui.theme.Pink40
 import com.edurda77.impuls.ui.theme.blue34
 import com.edurda77.impuls.ui.theme.blue53
@@ -114,9 +115,10 @@ fun MainScreen(
             )
             if (state.value.isEnableInternet) {
                 Spacer(modifier = modifier.height(10.dp))
+                val trackName = if (state.value.track== READ_ERROR_TRACK) stringResource(id = R.string.error_read_track) else state.value.track
                 Text(
                     modifier = modifier.fillMaxWidth(),
-                    text = "${stringResource(id = R.string.now_is_played)} ${state.value.radioName}\n${state.value.track}",
+                    text = "${stringResource(id = R.string.now_is_played)} ${state.value.radioName}\n$trackName",
                     style = TextStyle(
                         fontSize = 18.sp,
                         fontWeight = FontWeight(600),
@@ -162,7 +164,6 @@ fun MainScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = blue53
                 ),
-                enabled = state.value.isEnableInternet,
                 onClick = onNavigateToProvince) {
                 Text(
                     text = stringResource(R.string.choise_radio),

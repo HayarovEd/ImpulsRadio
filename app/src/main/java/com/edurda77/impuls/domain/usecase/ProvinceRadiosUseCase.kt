@@ -6,7 +6,6 @@ import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RemoteRepository
 import com.edurda77.impuls.domain.utils.DataError
-import com.edurda77.impuls.domain.utils.MILLS_IN_DAY
 import com.edurda77.impuls.domain.utils.ResultWork
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -15,36 +14,34 @@ import javax.inject.Inject
 class ProvinceRadiosUseCase @Inject constructor(
     private val remoteRepository: RemoteRepository,
     private val cacheRepository: CacheRepository,
-    private val  dataStoreRepository: DataStoreRepository,
+    private val dataStoreRepository: DataStoreRepository,
 ) {
     suspend operator fun invoke(
         isRefresh: Boolean,
     ): Flow<ResultWork<List<UiProvince>, DataError>> {
 
-            val flowProvinces = cacheRepository.getAllProvincies()
-            val flowDateStamp = dataStoreRepository.readDateUpdate()
-            return flowProvinces.combine(flowDateStamp) { cache, dateStamp->
-                when (cache) {
-                    is ResultWork.Error -> {
-                        ResultWork.Error(cache.error)
-                    }
-                    is ResultWork.Success -> {
-                        if (cache.data.isEmpty()||isRefresh||dateStamp+MILLS_IN_DAY<System.currentTimeMillis()) {
-                            when (val remoteData = getRemoteData()) {
-                                is ResultWork.Error -> {
-                                    ResultWork.Error(remoteData.error)
-                                }
-                                is ResultWork.Success -> {
-                                    ResultWork.Success(remoteData.data)
-                                }
-                            }
+        val flowProvinces = cacheRepository.getAllProvincies()
+        val flowDateStamp = dataStoreRepository.readDateUpdate()
+        return flowProvinces.combine(flowDateStamp) { cache, dateStamp ->
+            when (cache) {
+                is ResultWork.Error -> {
+                    getRemoteData()
+                }
 
+                is ResultWork.Success -> {
+                    if (cache.data.isEmpty() || isRefresh) {
+                        getRemoteData()
+                    } else {
+                       /* if (dateStamp + MILLS_IN_DAY < System.currentTimeMillis()) {
+                            getRemoteData()
                         } else {
                             ResultWork.Success(cache.data)
-                        }
+                        }*/
+                        ResultWork.Success(cache.data)
                     }
                 }
             }
+        }
     }
 
     private suspend fun getRemoteData(): ResultWork<List<UiProvince>, DataError> {
@@ -78,7 +75,8 @@ class ProvinceRadiosUseCase @Inject constructor(
                                     id = province.id,
                                     name = province.name,
                                     radios = resultRadios.data
-                                ))
+                                )
+                            )
                             dataStoreRepository.setDateUpdate(System.currentTimeMillis())
                         }
                     }

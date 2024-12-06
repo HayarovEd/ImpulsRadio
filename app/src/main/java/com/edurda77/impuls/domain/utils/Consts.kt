@@ -37,3 +37,5 @@ const val RADIO_PROVINCE_TIME = "time_stamp"
 const val RADIO_TABLE_PROVINCE = "province_id"
 
 const val MILLS_IN_DAY = 86400000
+
+const val READ_ERROR_TRACK = "error_track"

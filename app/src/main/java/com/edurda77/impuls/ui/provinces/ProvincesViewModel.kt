@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
-import com.edurda77.impuls.domain.repository.RemoteRepository
 import com.edurda77.impuls.domain.repository.ServiceRepository
 import com.edurda77.impuls.domain.usecase.ProvinceRadiosUseCase
 import com.edurda77.impuls.domain.utils.ResultWork
@@ -19,7 +18,7 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class ProvinesViewModel @Inject constructor(
+class ProvincesViewModel @Inject constructor(
     private val provinceRadiosUseCase: ProvinceRadiosUseCase,
     private val serviceRepository: ServiceRepository,
     private val dataStoreRepository: DataStoreRepository,
@@ -32,7 +31,7 @@ class ProvinesViewModel @Inject constructor(
 
 
     init {
-        getProvinces()
+        getProvinces(false)
         checkEnableInternet()
     }
 
@@ -53,16 +52,22 @@ class ProvinesViewModel @Inject constructor(
                     )
                 }
             }
+
+            ProvinceEvent.OnRefresh -> {
+                if (state.value.isEnableInternet) {
+                    getProvinces(isRefresh = true)
+                }
+            }
         }
     }
 
-    private fun getProvinces() {
+    private fun getProvinces(isRefresh: Boolean) {
         _state.value.copy(
             isLoading = true
         )
             .updateState()
         viewModelScope.launch {
-            provinceRadiosUseCase.invoke(true).collect{
+            provinceRadiosUseCase.invoke(isRefresh).collect{
                 when (it) {
                     is ResultWork.Error -> {
                         _state.value.copy(
