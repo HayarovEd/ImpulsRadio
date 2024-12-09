@@ -6,14 +6,16 @@ import com.edurda77.impuls.data.local.RadioEntity
 import com.edurda77.impuls.data.local.RadioProvinceEntity
 import com.edurda77.impuls.data.mapper.convertToProvinces
 import com.edurda77.impuls.data.mapper.convertToRadios
+import com.edurda77.impuls.data.mapper.radioProvinceEntityConvertToRadios
+import com.edurda77.impuls.domain.model.Province
 import com.edurda77.impuls.domain.model.RadioStation
-import com.edurda77.impuls.domain.model.UiProvince
 import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.utils.DataError
 import com.edurda77.impuls.domain.utils.ResultWork
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class CacheRepositoryImpl @Inject constructor(
@@ -54,79 +56,95 @@ class CacheRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun insertRadioProvince(
-        name: String,
-        url: String,
-        provinceId: Int,
-    ): ResultWork<Unit, DataError.LocalDataError> {
-        return try {
-            dao.insertRadioProvince(
-                RadioProvinceEntity(
-                    name = name,
-                    url = url,
-                    provinceId = provinceId,
-                    time = System.currentTimeMillis()
-                )
-            )
-            ResultWork.Success(Unit)
-        } catch (error: Exception) {
-            ResultWork.Error(DataError.LocalDataError.ERROR_WRITE_DATA)
-        }
-    }
-
 
     override suspend fun insertProvince(
         name: String,
         id: Int,
     ): ResultWork<Unit, DataError.LocalDataError> {
-        return try {
-            dao.insertProvince(
-                ProvinceEntity(
-                    name = name,
-                    id = id
+        return withContext(Dispatchers.IO) {
+            try {
+                dao.insertProvince(
+                    ProvinceEntity(
+                        name = name,
+                        id = id
+                    )
                 )
-            )
-            ResultWork.Success(Unit)
-        } catch (error: Exception) {
-            ResultWork.Error(DataError.LocalDataError.ERROR_WRITE_DATA)
+                ResultWork.Success(Unit)
+            } catch (error: Exception) {
+                ResultWork.Error(DataError.LocalDataError.ERROR_WRITE_DATA)
+            }
         }
     }
 
-    override suspend fun updateProvince(
+    override suspend fun getAllProvinces(): Flow<ResultWork<List<Province>, DataError.LocalDataError>> {
+        return flow {
+            try {
+                val result = dao.getProvinces()
+                result.collect { provinces ->
+                    emit(ResultWork.Success(provinces.convertToProvinces()))
+                }
+            } catch (error: Exception) {
+                emit(ResultWork.Error(DataError.LocalDataError.ERROR_READ_DATA))
+            }
+        }
+
+    }
+
+    override suspend fun clearCacheProvinces(): ResultWork<Unit, DataError.LocalDataError> {
+        return withContext(Dispatchers.IO) {
+            try {
+                dao.clearProvinces()
+                ResultWork.Success(Unit)
+            } catch (error: Exception) {
+                ResultWork.Error(DataError.LocalDataError.ERROR_WRITE_DATA)
+            }
+        }
+    }
+
+    override suspend fun insertRadioOfProvince(
         name: String,
-        id: Int,
-        isExpanded: Boolean
+        provinceId: Int,
+        url: String,
     ): ResultWork<Unit, DataError.LocalDataError> {
-        return try {
-            dao.insertProvince(
-                ProvinceEntity(
-                    name = name,
-                    id = id,
-                    isExpanded = isExpanded
+        return withContext(Dispatchers.IO) {
+            try {
+                dao.insertRadioProvince(
+                    RadioProvinceEntity(
+                        name = name,
+                        url = url,
+                        time = System.currentTimeMillis(),
+                        provinceId = provinceId
+                    )
                 )
-            )
-            ResultWork.Success(Unit)
-        } catch (error: Exception) {
-            ResultWork.Error(DataError.LocalDataError.ERROR_WRITE_DATA)
+                ResultWork.Success(Unit)
+            } catch (error: Exception) {
+                ResultWork.Error(DataError.LocalDataError.ERROR_WRITE_DATA)
+            }
         }
     }
 
-    override suspend fun getAllProvincies(): Flow<List<UiProvince>> {
-        val resultProvinces = dao.getProvinces()
-        val resultRadios = dao.getRadiosProvince()
-        return resultProvinces.combine(resultRadios) { provinces, radios ->
-            provinces.convertToProvinces(radios)
+    override suspend fun getRadiosByProvince(id: Int): Flow<ResultWork<List<RadioStation>, DataError.LocalDataError>> {
+        return flow {
+            try {
+                val result = dao.getRadiosByProvince(id)
+                result.collect { radios ->
+                    emit(ResultWork.Success(radios.radioProvinceEntityConvertToRadios()))
+                }
+            } catch (error: Exception) {
+                emit(ResultWork.Error(DataError.LocalDataError.ERROR_READ_DATA))
+            }
         }
 
     }
 
-    override suspend fun clearProvince(): ResultWork<Unit, DataError.LocalDataError> {
-        return try {
-            dao.clearRadiosProvince()
-            dao.clearProvincies()
-            ResultWork.Success(Unit)
-        } catch (error: Exception) {
-            ResultWork.Error(DataError.LocalDataError.ERROR_WRITE_DATA)
+    override suspend fun clearCacheRadiosByProvince(id: Int): ResultWork<Unit, DataError.LocalDataError> {
+        return withContext(Dispatchers.IO) {
+            try {
+                dao.clearRadiosProvinceByProvince(id)
+                ResultWork.Success(Unit)
+            } catch (error: Exception) {
+                ResultWork.Error(DataError.LocalDataError.ERROR_WRITE_DATA)
+            }
         }
     }
 }

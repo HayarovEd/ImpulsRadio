@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 class ServiceRepositoryImpl @Inject constructor(
     private val application: Application
-): ServiceRepository {
+) : ServiceRepository {
     private val connectivityManager = application.getSystemService<ConnectivityManager>()!!
 
     override val isConnected: Flow<Boolean>
@@ -52,4 +52,5 @@ class ServiceRepositoryImpl @Inject constructor(
                 connectivityManager.unregisterNetworkCallback(callback)
             }
         }
+
 }

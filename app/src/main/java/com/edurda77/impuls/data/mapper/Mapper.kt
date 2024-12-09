@@ -5,7 +5,6 @@ import com.edurda77.impuls.data.local.RadioEntity
 import com.edurda77.impuls.data.local.RadioProvinceEntity
 import com.edurda77.impuls.domain.model.Province
 import com.edurda77.impuls.domain.model.RadioStation
-import com.edurda77.impuls.domain.model.UiProvince
 
 fun String.convertToCategories(): List<Province> {
     val elements = this.split("|")
@@ -116,14 +115,11 @@ fun List<RadioProvinceEntity>.radioProvinceEntityConvertToRadios(): List<RadioSt
     }
 }
 
-fun List<ProvinceEntity>.convertToProvinces(radioEntities: List<RadioProvinceEntity>): List<UiProvince> {
-    val radios = radioEntities.radioProvinceEntityConvertToRadios()
+fun List<ProvinceEntity>.convertToProvinces(): List<Province> {
     return this.map { provinceEntity ->
-        UiProvince(
+        Province(
             name = provinceEntity.name,
             id = provinceEntity.id,
-            isExpandedRadios = provinceEntity.isExpanded,
-            radios = radios.filter { it.provinceId == provinceEntity.id }
         )
     }
 }

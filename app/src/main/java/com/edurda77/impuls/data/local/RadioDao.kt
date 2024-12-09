@@ -8,6 +8,7 @@ import androidx.room.Upsert
 import com.edurda77.impuls.domain.utils.PROVINCE_TABLE
 import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_TABLE
 import com.edurda77.impuls.domain.utils.RADIO_TABLE
+import com.edurda77.impuls.domain.utils.RADIO_TABLE_PROVINCE
 import kotlinx.coroutines.flow.Flow
 
 
@@ -22,11 +23,11 @@ interface RadioDao {
     @Upsert
     suspend fun insertRadioProvince(radioProvinceEntity: RadioProvinceEntity)
 
-    @Query("SELECT * FROM $RADIO_PROVINCE_TABLE")
-    fun getRadiosProvince(): Flow<List<RadioProvinceEntity>>
+    @Query("SELECT * FROM $RADIO_PROVINCE_TABLE WHERE $RADIO_TABLE_PROVINCE = :id")
+    fun getRadiosByProvince(id: Int): Flow<List<RadioProvinceEntity>>
 
-    @Query("DELETE FROM $RADIO_PROVINCE_TABLE")
-    suspend fun clearRadiosProvince()
+    @Query("DELETE FROM $RADIO_PROVINCE_TABLE WHERE $RADIO_TABLE_PROVINCE = :id")
+    suspend fun clearRadiosProvinceByProvince(id: Int)
 
     @Upsert
     suspend fun insertProvince(provinceEntity: ProvinceEntity)
@@ -35,6 +36,6 @@ interface RadioDao {
     fun getProvinces(): Flow<List<ProvinceEntity>>
 
     @Query("DELETE FROM $PROVINCE_TABLE")
-    suspend fun clearProvincies()
+    suspend fun clearProvinces()
 
 }

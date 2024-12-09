@@ -1,7 +1,7 @@
 package com.edurda77.impuls.domain.usecase
 
 
-import com.edurda77.impuls.domain.model.UiProvince
+import com.edurda77.impuls.domain.model.Province
 import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.RemoteRepository
 import com.edurda77.impuls.domain.utils.DataError
@@ -14,66 +14,43 @@ class ProvinceRadiosUseCase @Inject constructor(
     private val remoteRepository: RemoteRepository,
     private val cacheRepository: CacheRepository,
 ) {
-    operator fun invoke(
-    ): Flow<ResultWork<List<UiProvince>, DataError>> {
+    operator fun invoke(): Flow<ResultWork<List<Province>, DataError>> {
         return flow {
-            cacheRepository.getAllProvincies().collect { collector ->
-                if (collector.isEmpty()) {
-                    emit(getRemoteData(collector))
-                } else {
-                    emit(ResultWork.Success(collector))
+            cacheRepository.getAllProvinces().collect { collector ->
+                when (collector) {
+                    is ResultWork.Error -> {
+                        emit(getRemoteData())
+                    }
+
+                    is ResultWork.Success -> {
+                        if (collector.data.isEmpty()) {
+                            emit(getRemoteData())
+                        } else {
+                            emit(ResultWork.Success(collector.data))
+                        }
+                    }
                 }
             }
         }
     }
 
-    private suspend fun getRemoteData(localUiProvinces: List<UiProvince>): ResultWork<List<UiProvince>, DataError> {
+    private suspend fun getRemoteData(): ResultWork<List<Province>, DataError> {
+        cacheRepository.clearCacheProvinces()
         when (val resultProvinces = remoteRepository.getProvinces()) {
             is ResultWork.Error -> {
                 return ResultWork.Error(resultProvinces.error)
             }
 
             is ResultWork.Success -> {
-                val remoteResult = mutableListOf<UiProvince>()
-                resultProvinces.data.forEach { province ->
-                    val localProvince = localUiProvinces.firstOrNull { it.id == province.id }
-                    if (localProvince==null) {
-                        cacheRepository.insertProvince(
-                            name = province.name,
-                            id = province.id
-                        )
-                    } else {
-                        cacheRepository.updateProvince(
-                            name = province.name,
-                            id = province.id,
-                            isExpanded = localProvince.isExpandedRadios
-                        )
-                    }
-                    when (val resultRadios = remoteRepository.getRadioByProvince(province.id)) {
-                        is ResultWork.Error -> {
-                            return ResultWork.Error(resultRadios.error)
-                        }
-
-                        is ResultWork.Success -> {
-                            resultRadios.data.forEach { radio ->
-                                cacheRepository.insertRadioProvince(
-                                    name = radio.name,
-                                    url = radio.url,
-                                    provinceId = province.id
-                                )
-                            }
-                            remoteResult.add(
-                                UiProvince(
-                                    id = province.id,
-                                    name = province.name,
-                                    radios = resultRadios.data
-                                )
-                            )
-                        }
-                    }
+                resultProvinces.data.map {
+                    cacheRepository.insertProvince(
+                        name = it.name,
+                        id = it.id
+                    )
                 }
-                return ResultWork.Success(remoteResult)
+                return ResultWork.Success(resultProvinces.data)
             }
+
         }
     }
 }

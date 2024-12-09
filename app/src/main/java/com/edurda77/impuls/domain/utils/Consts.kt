@@ -29,7 +29,6 @@ const val RADIO_TABLE_TIME = "time_stamp"
 const val PROVINCE_TABLE = "province_table"
 const val PROVINCE_ID = "province_id"
 const val PROVINCE_NAME = "province_name"
-const val PROVINCE_EXPANDED = "province_expanded"
 
 const val RADIO_PROVINCE_TABLE = "radio_province_table"
 const val RADIO_PROVINCE_NAME = "radio_name"

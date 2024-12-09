@@ -154,50 +154,23 @@ fun ProvincesScreen(
                         modifier = modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(15.dp)
                     ) {
-                        state.value.provinces.forEach { province ->
-                            stickyHeader {
-                                Column(
-                                    modifier = modifier
-                                        .fillMaxWidth()
-                                        .background(color = white)
-                                        .clickable {
-                                            onEvent(ProvinceEvent.UpdateExpandedProvince(province))
-                                        }
-                                        .padding(10.dp),
-                                    horizontalAlignment = Alignment.Start
-                                ) {
-                                    Text(
-                                        modifier = modifier.fillMaxWidth(),
-                                        text = province.name,
-                                        style = TextStyle(
-                                            fontSize = 20.sp,
-                                            fontWeight = FontWeight(600),
-                                            textAlign = TextAlign.Start,
-                                            color = blue34
-                                        )
-                                    )
-                                }
-                            }
-                            if (province.isExpandedRadios) {
-                                items(province.radios) { radio ->
-                                    ItemElement(
-                                        name = radio.name,
-                                        onClick = {
-                                            if (state.value.isEnableInternet) {
-                                                onEvent(
-                                                    ProvinceEvent.OnPlay(
-                                                        name = radio.name,
-                                                        url = radio.url,
-                                                        provinceId = radio.provinceId
-                                                    )
-                                                )
-                                            }
-                                            onNavigateBack()
-                                        }
-                                    )
-                                }
-                            }
-                        }
+                       items(state.value.provinces) { province ->
+                           ItemElement(
+                               name = province.name,
+                               onClick = {
+                                   /*if (state.value.isEnableInternet) {
+                                       onEvent(
+                                           ProvinceEvent.OnPlay(
+                                               name = radio.name,
+                                               url = radio.url,
+                                               provinceId = radio.provinceId
+                                           )
+                                       )
+                                   }
+                                   onNavigateBack()*/
+                               }
+                           )
+                       }
                     }
                 }
             }

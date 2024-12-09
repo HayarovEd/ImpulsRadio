@@ -64,7 +64,7 @@ class ProvincesViewModel @Inject constructor(
                 viewModelScope.launch {
                     delay(1000)
                     if (state.value.isEnableInternet) {
-                        when (val result = refreshProvinceRadiosUseCase.invoke(state.value.provinces)) {
+                        when (val result = refreshProvinceRadiosUseCase.invoke()) {
                             is ResultWork.Error -> {
                                 _state.value.copy(
                                     isLoading = false,
@@ -80,16 +80,6 @@ class ProvincesViewModel @Inject constructor(
                             }
                         }
                     }
-                }
-            }
-
-            is ProvinceEvent.UpdateExpandedProvince -> {
-                viewModelScope.launch {
-                    cacheRepository.updateProvince(
-                        name = event.province.name,
-                        id = event.province.id,
-                        isExpanded = !event.province.isExpandedRadios
-                    )
                 }
             }
         }
