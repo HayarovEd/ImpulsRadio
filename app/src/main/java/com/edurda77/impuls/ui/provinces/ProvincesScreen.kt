@@ -143,37 +143,23 @@ fun ProvincesScreen(
                 }
             }
         ) {
-            Box(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(15.dp),
-            ) {
-                if (!state.value.isLoading) {
-                    LazyColumn(
-                        modifier = modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(15.dp)
-                    ) {
-                       items(state.value.provinces) { province ->
-                           ItemElement(
-                               name = province.name,
-                               onClick = {
-                                   /*if (state.value.isEnableInternet) {
-                                       onEvent(
-                                           ProvinceEvent.OnPlay(
-                                               name = radio.name,
-                                               url = radio.url,
-                                               provinceId = radio.provinceId
-                                           )
-                                       )
-                                   }
-                                   onNavigateBack()*/
-                                   onNavigateToRadioScreen(
-                                       province.id,
-                                       province.name
-                                   )
-                               }
-                           )
-                       }
+            if (!state.value.isLoading) {
+                LazyColumn(
+                    modifier = modifier
+                        .fillMaxSize()
+                        .padding(15.dp),
+                    verticalArrangement = Arrangement.spacedBy(15.dp)
+                ) {
+                    items(state.value.provinces) { province ->
+                        ItemElement(
+                            name = province.name,
+                            onClick = {
+                                onNavigateToRadioScreen(
+                                    province.id,
+                                    province.name
+                                )
+                            }
+                        )
                     }
                 }
             }

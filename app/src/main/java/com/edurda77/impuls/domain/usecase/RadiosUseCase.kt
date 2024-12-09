@@ -1,26 +1,29 @@
 package com.edurda77.impuls.domain.usecase
 
 
-import com.edurda77.impuls.domain.model.Province
+import com.edurda77.impuls.domain.model.RadioStation
 import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.RemoteRepository
 import com.edurda77.impuls.domain.utils.DataError
 import com.edurda77.impuls.domain.utils.ResultWork
 import javax.inject.Inject
 
-class ProvinceRadiosUseCase @Inject constructor(
+class RadiosUseCase @Inject constructor(
     private val remoteRepository: RemoteRepository,
     private val cacheRepository: CacheRepository,
 ) {
-    suspend operator fun invoke(isRefresh: Boolean): ResultWork<List<Province>, DataError> {
-        return when (val result = cacheRepository.getAllProvinces()) {
+    suspend operator fun invoke(
+        id: Int,
+        isRefresh: Boolean
+    ): ResultWork<List<RadioStation>, DataError> {
+        return when (val result = cacheRepository.getRadiosByProvince(id)) {
             is ResultWork.Error -> {
-                getRemoteData()
+                getRemoteData(id)
             }
 
             is ResultWork.Success -> {
                 if (result.data.isEmpty() || isRefresh) {
-                    getRemoteData()
+                    getRemoteData(id)
                 } else {
                     ResultWork.Success(result.data)
                 }
@@ -28,18 +31,19 @@ class ProvinceRadiosUseCase @Inject constructor(
         }
     }
 
-    private suspend fun getRemoteData(): ResultWork<List<Province>, DataError> {
-        cacheRepository.clearCacheProvinces()
-        when (val resultProvinces = remoteRepository.getProvinces()) {
+    private suspend fun getRemoteData(id: Int): ResultWork<List<RadioStation>, DataError> {
+        cacheRepository.clearCacheRadiosByProvince(id)
+        when (val resultProvinces = remoteRepository.getRadioByProvince(id)) {
             is ResultWork.Error -> {
                 return ResultWork.Error(resultProvinces.error)
             }
 
             is ResultWork.Success -> {
                 resultProvinces.data.map {
-                    cacheRepository.insertProvince(
+                    cacheRepository.insertRadioOfProvince(
                         name = it.name,
-                        id = it.id
+                        provinceId = id,
+                        url = it.url
                     )
                 }
                 return ResultWork.Success(resultProvinces.data)

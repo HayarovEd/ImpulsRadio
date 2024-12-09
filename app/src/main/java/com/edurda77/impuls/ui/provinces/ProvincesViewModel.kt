@@ -6,7 +6,7 @@ import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
 import com.edurda77.impuls.domain.repository.ServiceRepository
-import com.edurda77.impuls.domain.usecase.ProvinceRadiosUseCase
+import com.edurda77.impuls.domain.usecase.ProvincesUseCase
 import com.edurda77.impuls.domain.utils.ResultWork
 import com.edurda77.impuls.ui.uikit.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +20,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProvincesViewModel @Inject constructor(
-    private val provinceRadiosUseCase: ProvinceRadiosUseCase,
+    private val provincesUseCase: ProvincesUseCase,
     private val serviceRepository: ServiceRepository,
     private val dataStoreRepository: DataStoreRepository,
     private val cacheRepository: CacheRepository,
@@ -75,7 +75,7 @@ class ProvincesViewModel @Inject constructor(
         )
             .updateState()
         viewModelScope.launch {
-            when (val result = provinceRadiosUseCase.invoke(isRefresh)) {
+            when (val result = provincesUseCase.invoke(isRefresh)) {
                 is ResultWork.Error -> {
                     _state.value.copy(
                         isLoading = false,

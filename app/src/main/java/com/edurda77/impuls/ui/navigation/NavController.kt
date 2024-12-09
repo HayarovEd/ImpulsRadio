@@ -51,7 +51,12 @@ fun NavController(
             )
         ) {
             RadiosScreen(
-                navController = navController
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
+                onNavigateToMainScreen = {
+                    navController.navigate(MAIN_SCREEN)
+                }
             )
         }
     }
