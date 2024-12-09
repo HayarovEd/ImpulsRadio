@@ -24,7 +24,7 @@ interface RadioDao {
     suspend fun insertRadioProvince(radioProvinceEntity: RadioProvinceEntity)
 
     @Query("SELECT * FROM $RADIO_PROVINCE_TABLE WHERE $RADIO_TABLE_PROVINCE = :id")
-    fun getRadiosByProvince(id: Int): Flow<List<RadioProvinceEntity>>
+    fun getRadiosByProvince(id: Int): List<RadioProvinceEntity>
 
     @Query("DELETE FROM $RADIO_PROVINCE_TABLE WHERE $RADIO_TABLE_PROVINCE = :id")
     suspend fun clearRadiosProvinceByProvince(id: Int)
@@ -33,7 +33,7 @@ interface RadioDao {
     suspend fun insertProvince(provinceEntity: ProvinceEntity)
 
     @Query("SELECT * FROM $PROVINCE_TABLE")
-    fun getProvinces(): Flow<List<ProvinceEntity>>
+    fun getProvinces(): List<ProvinceEntity>
 
     @Query("DELETE FROM $PROVINCE_TABLE")
     suspend fun clearProvinces()

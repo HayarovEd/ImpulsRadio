@@ -76,15 +76,13 @@ class CacheRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAllProvinces(): Flow<ResultWork<List<Province>, DataError.LocalDataError>> {
-        return flow {
+    override suspend fun getAllProvinces(): ResultWork<List<Province>, DataError.LocalDataError> {
+        return withContext(Dispatchers.IO) {
             try {
                 val result = dao.getProvinces()
-                result.collect { provinces ->
-                    emit(ResultWork.Success(provinces.convertToProvinces()))
-                }
+                ResultWork.Success(result.convertToProvinces())
             } catch (error: Exception) {
-                emit(ResultWork.Error(DataError.LocalDataError.ERROR_READ_DATA))
+                ResultWork.Error(DataError.LocalDataError.ERROR_READ_DATA)
             }
         }
 
@@ -123,15 +121,13 @@ class CacheRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getRadiosByProvince(id: Int): Flow<ResultWork<List<RadioStation>, DataError.LocalDataError>> {
-        return flow {
+    override suspend fun getRadiosByProvince(id: Int): ResultWork<List<RadioStation>, DataError.LocalDataError> {
+        return withContext(Dispatchers.IO)  {
             try {
                 val result = dao.getRadiosByProvince(id)
-                result.collect { radios ->
-                    emit(ResultWork.Success(radios.radioProvinceEntityConvertToRadios()))
-                }
+                ResultWork.Success(result.radioProvinceEntityConvertToRadios())
             } catch (error: Exception) {
-                emit(ResultWork.Error(DataError.LocalDataError.ERROR_READ_DATA))
+                ResultWork.Error(DataError.LocalDataError.ERROR_READ_DATA)
             }
         }
 

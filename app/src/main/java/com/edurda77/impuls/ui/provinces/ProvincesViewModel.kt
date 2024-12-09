@@ -7,7 +7,6 @@ import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
 import com.edurda77.impuls.domain.repository.ServiceRepository
 import com.edurda77.impuls.domain.usecase.ProvinceRadiosUseCase
-import com.edurda77.impuls.domain.usecase.RefreshProvinceRadiosUseCase
 import com.edurda77.impuls.domain.utils.ResultWork
 import com.edurda77.impuls.ui.uikit.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +21,6 @@ import javax.inject.Inject
 @HiltViewModel
 class ProvincesViewModel @Inject constructor(
     private val provinceRadiosUseCase: ProvinceRadiosUseCase,
-    private val refreshProvinceRadiosUseCase: RefreshProvinceRadiosUseCase,
     private val serviceRepository: ServiceRepository,
     private val dataStoreRepository: DataStoreRepository,
     private val cacheRepository: CacheRepository,
@@ -34,7 +32,7 @@ class ProvincesViewModel @Inject constructor(
 
 
     init {
-        getProvinces()
+        getProvinces(false)
         checkEnableInternet()
     }
 
@@ -57,57 +55,40 @@ class ProvincesViewModel @Inject constructor(
             }
 
             ProvinceEvent.OnRefresh -> {
-                _state.value.copy(
-                    isLoading = true
-                )
-                    .updateState()
-                viewModelScope.launch {
-                    delay(1000)
-                    if (state.value.isEnableInternet) {
-                        when (val result = refreshProvinceRadiosUseCase.invoke()) {
-                            is ResultWork.Error -> {
-                                _state.value.copy(
-                                    isLoading = false,
-                                    message = result.error.asUiText()
-                                )
-                                    .updateState()
-                            }
-                            is ResultWork.Success -> {
-                                _state.value.copy(
-                                    isLoading = false,
-                                )
-                                    .updateState()
-                            }
-                        }
+                if (state.value.isEnableInternet) {
+                    _state.value.copy(
+                        isLoading = true
+                    )
+                        .updateState()
+                    viewModelScope.launch {
+                        delay(1000)
+                        getProvinces(true)
                     }
                 }
             }
         }
     }
 
-    private fun getProvinces() {
+    private fun getProvinces(isRefresh: Boolean) {
         _state.value.copy(
             isLoading = true
         )
             .updateState()
         viewModelScope.launch {
-            provinceRadiosUseCase.invoke().collect {
-                when (it) {
-                    is ResultWork.Error -> {
-                        _state.value.copy(
-                            isLoading = false,
-                            message = it.error.asUiText()
-                        )
-                            .updateState()
-                    }
-
-                    is ResultWork.Success -> {
-                        _state.value.copy(
-                            isLoading = false,
-                            provinces = it.data
-                        )
-                            .updateState()
-                    }
+            when (val result = provinceRadiosUseCase.invoke(isRefresh)) {
+                is ResultWork.Error -> {
+                    _state.value.copy(
+                        isLoading = false,
+                        message = result.error.asUiText()
+                    )
+                        .updateState()
+                }
+                is ResultWork.Success -> {
+                    _state.value.copy(
+                        isLoading = false,
+                        provinces = result.data
+                    )
+                        .updateState()
                 }
             }
         }

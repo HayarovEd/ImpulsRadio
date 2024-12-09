@@ -1,8 +1,6 @@
 package com.edurda77.impuls.ui.provinces
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,12 +44,13 @@ import com.edurda77.impuls.ui.theme.white
 import com.edurda77.impuls.ui.uikit.ItemElement
 
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProvincesScreen(
     modifier: Modifier = Modifier,
     viewModel: ProvincesViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit,
+    onNavigateToRadioScreen: (Int, String) -> Unit,
 ) {
     val state = viewModel.state.collectAsState()
     val onEvent = viewModel::onEvent
@@ -168,6 +167,10 @@ fun ProvincesScreen(
                                        )
                                    }
                                    onNavigateBack()*/
+                                   onNavigateToRadioScreen(
+                                       province.id,
+                                       province.name
+                                   )
                                }
                            )
                        }

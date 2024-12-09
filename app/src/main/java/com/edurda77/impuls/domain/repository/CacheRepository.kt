@@ -17,13 +17,13 @@ interface CacheRepository {
 
     suspend fun insertProvince(name: String, id: Int): ResultWork<Unit, DataError.LocalDataError>
     suspend fun clearCacheProvinces(): ResultWork<Unit, DataError.LocalDataError>
-    suspend fun getAllProvinces(): Flow<ResultWork<List<Province>, DataError.LocalDataError>>
+    suspend fun getAllProvinces(): ResultWork<List<Province>, DataError.LocalDataError>
     suspend fun insertRadioOfProvince(
         name: String,
         provinceId: Int,
         url: String
     ): ResultWork<Unit, DataError.LocalDataError>
 
-    suspend fun getRadiosByProvince(id: Int): Flow<ResultWork<List<RadioStation>, DataError.LocalDataError>>
+    suspend fun getRadiosByProvince(id: Int): ResultWork<List<RadioStation>, DataError.LocalDataError>
     suspend fun clearCacheRadiosByProvince(id: Int): ResultWork<Unit, DataError.LocalDataError>
 }

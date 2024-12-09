@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.edurda77.impuls.domain.utils.MAIN_SCREEN
 import com.edurda77.impuls.domain.utils.PROVINCE_SCREEN
+import com.edurda77.impuls.domain.utils.RADIOS_SCREEN
 import com.edurda77.impuls.ui.main.MainScreen
 import com.edurda77.impuls.ui.provinces.ProvincesScreen
 import com.edurda77.impuls.ui.radios.RadiosScreen
@@ -31,7 +32,26 @@ fun NavController(
             ProvincesScreen(
                 onNavigateBack = {
                     navController.navigateUp()
+                },
+                onNavigateToRadioScreen = { id, name ->
+                    navController.navigate("$RADIOS_SCREEN/${id}/${name}")
                 }
+            )
+        }
+
+        composable(
+            NavigationDestination.RadiosScreenDestination.destination,
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.IntType
+                },
+                navArgument("name") {
+                    type = NavType.StringType
+                },
+            )
+        ) {
+            RadiosScreen(
+                navController = navController
             )
         }
     }
