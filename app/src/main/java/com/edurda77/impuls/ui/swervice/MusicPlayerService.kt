@@ -138,7 +138,6 @@ class MusicPlayerService : MediaSessionService() {
                 override fun onEvents(player: Player, events: Player.Events) {
                     super.onEvents(player, events)
                     if (player.isPlaying) {
-                        Log.d("TEST REMOTE SERVICE DATA", "player  play")
                         scope.launch {
                             application.dataStore.edit { settings ->
                                 settings[FIELD_IS_PLAY] = true
@@ -150,7 +149,6 @@ class MusicPlayerService : MediaSessionService() {
                                 settings[FIELD_IS_PLAY] = false
                             }
                         }
-                        Log.d("TEST REMOTE SERVICE DATA", "player  paused")
                     }
                 }
             }
@@ -222,7 +220,7 @@ class MusicPlayerService : MediaSessionService() {
         notificationManager.createNotificationChannel(NotificationChannel("notification_id","Channel", NotificationManager.IMPORTANCE_LOW))
 
         nBuilder = NotificationCompat.Builder(this,"notification_id")
-            .setSmallIcon(R.drawable.logo_s)
+            .setSmallIcon(R.drawable.logo_w)
             .setContentIntent(pendingIntent)
             .setStyle(MediaStyleNotificationHelper.MediaStyle(session))
 
@@ -257,7 +255,7 @@ class MusicPlayerService : MediaSessionService() {
             ensureNotificationChannel(notificationManagerCompat)
             val builder =
                 NotificationCompat.Builder(this@MusicPlayerService, CHANNEL_ID)
-                    .setSmallIcon(R.drawable.logo_s)
+                    //.setSmallIcon(R.drawable.logo_s)
                     .setContentTitle(getString(R.string.notification_content_title))
                     .setStyle(
                         NotificationCompat.BigTextStyle().bigText(getString(R.string.notification_content_text))
