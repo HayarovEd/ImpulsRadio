@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import com.edurda77.impuls.ui.navigation.NavController
 import com.edurda77.impuls.ui.theme.MyApplicationTheme
 import com.edurda77.impuls.ui.uikit.AccessScreen
@@ -17,7 +18,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //enableEdgeToEdge()
+        enableEdgeToEdge()
         //ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 123)
         val permissions = if (
             Build.VERSION.SDK_INT >= 33

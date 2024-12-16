@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,13 +20,19 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -35,9 +42,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.edurda77.impuls.R
-import com.edurda77.impuls.domain.utils.PROVINCE_SCREEN
+import com.edurda77.impuls.domain.utils.READ_ERROR_TRACK
+import com.edurda77.impuls.ui.theme.Pink40
 import com.edurda77.impuls.ui.theme.blue34
 import com.edurda77.impuls.ui.theme.blue53
 import com.edurda77.impuls.ui.theme.white
@@ -48,14 +55,44 @@ import com.edurda77.impuls.ui.uikit.SquareBarVisualizerRelease
 fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel = hiltViewModel(),
-    navController: NavHostController
+    onNavigateToProvince: () -> Unit,
 ) {
     val state = viewModel.state.collectAsState()
     val onEvent = viewModel::onEvent
+
+    val snakeBarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    LaunchedEffect(key1 = state.value.message) {
+        if (state.value.message != null) {
+            snakeBarHostState.showSnackbar(
+                message = state.value.message!!.asString(context),
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = blue34,
+        snackbarHost = { SnackbarHost(snakeBarHostState) },
+        topBar = {
+            if (!state.value.isEnableInternet) {
+                Text(
+                    modifier = modifier
+                        .statusBarsPadding()
+                        .fillMaxWidth()
+                        .background(color = Pink40),
+                    text = stringResource(R.string.not_internet),
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight(600),
+                        textAlign = TextAlign.Center,
+                        color = white
+                    )
+                )
+            }
+        },
         bottomBar = {
-            if (state.value.sessionId != 0&&state.value.isPlayed) {
+            if (state.value.sessionId != 0 && state.value.isPlayed) {
                 SquareBarVisualizerRelease(
                     audioSessionId = state.value.sessionId
                 )
@@ -66,8 +103,7 @@ fun MainScreen(
             modifier = modifier
                 .padding(paddings)
                 .fillMaxSize()
-                .background(color = blue34)
-                .padding(15.dp),
+                .padding(horizontal = 15.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
@@ -77,19 +113,22 @@ fun MainScreen(
                 contentDescription = "",
                 contentScale = ContentScale.FillWidth
             )
-            Spacer(modifier = modifier.height(10.dp))
-            Text(
-                modifier = modifier.fillMaxWidth(),
-                text = "${stringResource(id = R.string.now_is_played)} ${state.value.radioName}\n${state.value.track}",
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight(600),
-                    textAlign = TextAlign.Center,
-                    color = white
+            if (state.value.isEnableInternet) {
+                Spacer(modifier = modifier.height(10.dp))
+                val trackName = if (state.value.track== READ_ERROR_TRACK) stringResource(id = R.string.error_read_track) else state.value.track
+                Text(
+                    modifier = modifier.fillMaxWidth(),
+                    text = "${stringResource(id = R.string.now_is_played)} ${state.value.radioName}\n$trackName",
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight(600),
+                        textAlign = TextAlign.Center,
+                        color = white
+                    )
                 )
-            )
+            }
             Spacer(modifier = modifier.height(10.dp))
-            if(state.value.isShowButton) {
+            if (state.value.isShowButton && state.value.isEnableInternet) {
                 IconButton(
                     modifier = modifier.size(100.dp),
                     onClick = {
@@ -125,7 +164,7 @@ fun MainScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = blue53
                 ),
-                onClick = { navController.navigate(PROVINCE_SCREEN) }) {
+                onClick = onNavigateToProvince) {
                 Text(
                     text = stringResource(R.string.choise_radio),
                     style = TextStyle(
@@ -146,24 +185,25 @@ fun MainScreen(
                     color = white
                 )
             )
-            Spacer(modifier = modifier.height(5.dp))
-            LazyColumn(
-                modifier = modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(15.dp)
-            ) {
-                items(state.value.lastRadio) {
-                    ItemElement(
-                        name = it.name,
-                        isCenter = false,
-                        onClick = {
-                            onEvent(
-                                MainEvent.OnPlay(
-                                    name = it.name,
-                                    url = it.url
+            if (state.value.isEnableInternet) {
+                Spacer(modifier = modifier.height(5.dp))
+                LazyColumn(
+                    modifier = modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(15.dp)
+                ) {
+                    items(state.value.lastRadio) {
+                        ItemElement(
+                            name = it.name,
+                            onClick = {
+                                onEvent(
+                                    MainEvent.OnPlay(
+                                        name = it.name,
+                                        url = it.url
+                                    )
                                 )
-                            )
-                        }
-                    )
+                            }
+                        )
+                    }
                 }
             }
         }

@@ -8,4 +8,5 @@ sealed class NavigationDestination(val destination: String) {
     data object MainScreenDestination: NavigationDestination(MAIN_SCREEN)
     data object ProvincesScreenDestination: NavigationDestination(PROVINCE_SCREEN)
     data object RadiosScreenDestination: NavigationDestination("$RADIOS_SCREEN/{id}/{name}")
+
 }

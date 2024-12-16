@@ -1,6 +1,7 @@
 package com.edurda77.impuls.domain.repository
 
-import com.edurda77.impuls.domain.utils.Resource
+import com.edurda77.impuls.domain.utils.DataError
+import com.edurda77.impuls.domain.utils.ResultWork
 
 interface RadioPlayerRepository {
     fun playRadio(radioUrl: String)
@@ -11,6 +12,6 @@ interface RadioPlayerRepository {
         radioUrl: String
     )
 
-    suspend fun getMetaData(radioUrl: String): Resource<String>
+    suspend fun getMetaData(radioUrl: String): ResultWork<String, DataError.Network>
     fun checkPlayRadio(callback: (Boolean) -> Unit)
 }

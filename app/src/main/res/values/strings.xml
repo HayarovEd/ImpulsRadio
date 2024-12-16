@@ -15,4 +15,11 @@
 
 <string name="notification_channel_name">Playback cannot be resumed</string>
     <string name="get_access">Предоставить доступ</string>
+    <string name="server_error">Ошибка сервера</string>
+    <string name="unknown_error">Незивестная ошибка</string>
+    <string name="not_unique_id">Неверный запрос</string>
+    <string name="error_read">Ошибка чтения</string>
+    <string name="error_write">Ошибка записи</string>
+    <string name="not_internet">Нет соединения</string>
+    <string name="error_read_track">Ошибка получения данных</string>
 </resources>

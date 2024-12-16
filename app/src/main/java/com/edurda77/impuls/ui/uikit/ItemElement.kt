@@ -23,7 +23,6 @@ import com.edurda77.impuls.ui.theme.white
 fun ItemElement(
     modifier: Modifier = Modifier,
     name:String,
-    isCenter: Boolean,
     onClick: () -> Unit
 ) {
     Column(
@@ -33,15 +32,15 @@ fun ItemElement(
             .background(color = blue53)
             .clickable(onClick = onClick)
             .padding(10.dp),
-        horizontalAlignment = if (isCenter) Alignment.CenterHorizontally else Alignment.Start
+        horizontalAlignment = Alignment.Start
     ) {
         Text(
             modifier = modifier.fillMaxWidth(),
             text = name,
             style = TextStyle(
-                fontSize = 20.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight(600),
-                textAlign = if (isCenter) TextAlign.Center else TextAlign.Start,
+                textAlign = TextAlign.Start,
                 color = white
             )
         )
