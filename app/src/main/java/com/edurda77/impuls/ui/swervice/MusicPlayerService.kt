@@ -30,15 +30,15 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
 import com.edurda77.impuls.R
+import com.edurda77.impuls.data.handler.handleResponse
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_IS_PLAY
-import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_NAME
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_TRACK
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_URL
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_SESSION_ID
 import com.edurda77.impuls.data.repository.dataStore
+import com.edurda77.impuls.domain.utils.DataError
 import com.edurda77.impuls.domain.utils.PARSER_URL
-import com.edurda77.impuls.domain.utils.Resource
-import com.edurda77.impuls.domain.utils.UNKNOWN_ERROR
+import com.edurda77.impuls.domain.utils.ResultWork
 import com.edurda77.impuls.ui.MainActivity
 import com.google.common.collect.ImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -47,7 +47,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
+import java.net.UnknownHostException
 
 
 @UnstableApi
@@ -106,23 +108,18 @@ class MusicPlayerService : MediaSessionService() {
                 .dataStore
                 .data
                 .map {mapped->
-                    //Log.d("TEST REMOTE SERVICE DATA", "get radio ${mapped[FIELD_RADIO_URL]}")
                      mapped[FIELD_RADIO_URL] ?: ""
-                    //Log.d("TEST REMOTE SERVICE DATA", "get radio a  $a")
                 }.collect { collected ->
-                    //Log.d("TEST REMOTE SERVICE DATA", "radio $collected")
                     while (true) {
                         when (val result = getMetaData(collected)) {
-                            is Resource.Error -> {
-                                //Log.d("TEST REMOTE SERVICE DATA", "error ${result.message}")
+                            is ResultWork.Error -> {
                             }
 
-                            is Resource.Success -> {
-                                if (!result.data.isNullOrBlank()) {
+                            is ResultWork.Success -> {
+                                if (result.data.isNotBlank()) {
                                     application.dataStore.edit { settings ->
                                         settings[FIELD_RADIO_TRACK] = result.data
                                     }
-                                    //Log.d("TEST REMOTE SERVICE DATA", "body ${result.data}")
                                 }
                             }
                         }
@@ -141,7 +138,6 @@ class MusicPlayerService : MediaSessionService() {
                 override fun onEvents(player: Player, events: Player.Events) {
                     super.onEvents(player, events)
                     if (player.isPlaying) {
-                        Log.d("TEST REMOTE SERVICE DATA", "player  play")
                         scope.launch {
                             application.dataStore.edit { settings ->
                                 settings[FIELD_IS_PLAY] = true
@@ -153,7 +149,6 @@ class MusicPlayerService : MediaSessionService() {
                                 settings[FIELD_IS_PLAY] = false
                             }
                         }
-                        Log.d("TEST REMOTE SERVICE DATA", "player  paused")
                     }
                 }
             }
@@ -195,22 +190,17 @@ class MusicPlayerService : MediaSessionService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
 
-    private suspend fun getMetaData(radioUrl: String): Resource<String> {
-        return try {
-            withContext(Dispatchers.IO)
-            {
+    private suspend fun getMetaData(radioUrl: String): ResultWork<String, DataError.Network> {
+        return withContext(Dispatchers.IO)  {
+            handleResponse {
                 val doc = Jsoup.connect(PARSER_URL)
                     .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0")
                     .data("text", radioUrl)
                     .post()
                 val body = doc.body().html()
-                Log.d("TEST REMOTE DATA", "body $body")
-                Resource.Success(body)
+                body
             }
-        } catch (error: Exception) {
-            error.printStackTrace()
-            Resource.Error(message = error.localizedMessage ?: UNKNOWN_ERROR)
         }
     }
 
@@ -230,7 +220,7 @@ class MusicPlayerService : MediaSessionService() {
         notificationManager.createNotificationChannel(NotificationChannel("notification_id","Channel", NotificationManager.IMPORTANCE_LOW))
 
         nBuilder = NotificationCompat.Builder(this,"notification_id")
-            .setSmallIcon(R.drawable.logo_s)
+            .setSmallIcon(R.drawable.logo_w)
             .setContentIntent(pendingIntent)
             .setStyle(MediaStyleNotificationHelper.MediaStyle(session))
 
@@ -265,7 +255,7 @@ class MusicPlayerService : MediaSessionService() {
             ensureNotificationChannel(notificationManagerCompat)
             val builder =
                 NotificationCompat.Builder(this@MusicPlayerService, CHANNEL_ID)
-                    .setSmallIcon(R.drawable.logo_s)
+                    //.setSmallIcon(R.drawable.logo_s)
                     .setContentTitle(getString(R.string.notification_content_title))
                     .setStyle(
                         NotificationCompat.BigTextStyle().bigText(getString(R.string.notification_content_text))

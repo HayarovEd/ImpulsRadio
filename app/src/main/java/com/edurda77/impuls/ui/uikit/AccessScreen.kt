@@ -96,10 +96,10 @@ private fun getTextToShowGivenPermissions(
     if (revokedPermissionsSize == 0) return ""
 
     val textToShow = StringBuilder().apply {
-        append("The ")
+        append("")
     }
 
-    for (i in permissions.indices) {
+   /* for (i in permissions.indices) {
         textToShow.append(permissions[i].permission)
         when {
             revokedPermissionsSize > 1 && i == revokedPermissionsSize - 2 -> {
@@ -113,7 +113,7 @@ private fun getTextToShowGivenPermissions(
             }
         }
     }
-    textToShow.append(if (revokedPermissionsSize == 1) "permission is" else "permissions are")
+    textToShow.append(if (revokedPermissionsSize == 1) "permission is" else "permissions are")*/
     textToShow.append(
         if (shouldShowRationale) {
             context.getString(R.string.important_access)

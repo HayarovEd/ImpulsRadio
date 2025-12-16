@@ -13,14 +13,16 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
+import com.edurda77.impuls.domain.utils.DataError
 import com.edurda77.impuls.domain.utils.PARSER_URL
-import com.edurda77.impuls.domain.utils.Resource
-import com.edurda77.impuls.domain.utils.UNKNOWN_ERROR
+import com.edurda77.impuls.domain.utils.ResultWork
 import com.edurda77.impuls.ui.swervice.MusicPlayerService
 import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 @UnstableApi
@@ -64,7 +66,7 @@ class RadioPlayerRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun getMetaData(radioUrl:String): Resource<String> {
+    override suspend fun getMetaData(radioUrl: String): ResultWork<String, DataError.Network> {
         return try {
             withContext(Dispatchers.IO)
             {
@@ -75,28 +77,35 @@ class RadioPlayerRepositoryImpl @Inject constructor(
                     .post()
                 val body = doc.body().html()
                 Log.d("TEST REMOTE DATA", "body $body")
-                Resource.Success(body)
+                ResultWork.Success(body)
             }
-        } catch (error: Exception) {
-            error.printStackTrace()
-            Resource.Error(message = error.localizedMessage ?: UNKNOWN_ERROR)
+        } catch (e: HttpStatusException) {
+            when (e.statusCode) {
+                in 400..499 -> ResultWork.Error(DataError.Network.BAD_REQUEST)
+                in 500..599 -> ResultWork.Error(DataError.Network.SERVER_ERROR)
+                else -> ResultWork.Error(DataError.Network.UNKNOWN)
+            }
+        } catch (e: UnknownHostException) {
+            e.printStackTrace()
+            ResultWork.Error(DataError.Network.NO_INTERNET)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ResultWork.Error(DataError.Network.UNKNOWN)
         }
     }
 
     @OptIn(UnstableApi::class)
     override fun onStart(
         title: String,
-       // track: String,
-        radioUrl: String) {
+        radioUrl: String
+    ) {
         val mediaItem =
             MediaItem.Builder()
                 .setUri(radioUrl)
 
                 .setMediaMetadata(
                     MediaMetadata.Builder()
-                       //.setArtist(track)
                         .setTitle(title)
-                       // .setArtworkUri(artworkUri)
                         .build()
                 )
                 .build()
@@ -108,10 +117,8 @@ class RadioPlayerRepositoryImpl @Inject constructor(
                 mediaPlayer.setMediaItem(mediaItem)
                 mediaPlayer.prepare()
                 mediaPlayer.play()
-                val metaRetriever  =  MediaMetadataRetriever()
+                val metaRetriever = MediaMetadataRetriever()
                 metaRetriever.setDataSource(radioUrl)
-                val artist =  metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
-                Log.d("TEST GET DATA", "data $artist")
             },
             MoreExecutors.directExecutor()
         )

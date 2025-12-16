@@ -11,4 +11,6 @@ interface DataStoreRepository {
     fun readRadioName(): Flow<String>
     fun readSessionId(): Flow<Int>
     fun readIsPlay(): Flow<Boolean>
+    suspend fun setDateUpdate(dateStamp: Long)
+    fun readDateUpdate(): Flow<Long>
 }
