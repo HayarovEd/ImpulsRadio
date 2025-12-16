@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.edurda77.impuls.domain.utils.RADIO_TABLE
 import com.edurda77.impuls.domain.utils.RADIO_TABLE_NAME
+import com.edurda77.impuls.domain.utils.RADIO_TABLE_PROVINCE
 import com.edurda77.impuls.domain.utils.RADIO_TABLE_TIME
 import com.edurda77.impuls.domain.utils.RADIO_TABLE_URL
 
@@ -18,5 +19,7 @@ data class RadioEntity(
     val url:String,
     @ColumnInfo(name = RADIO_TABLE_TIME)
     val time:Long,
+    @ColumnInfo(name = RADIO_TABLE_PROVINCE)
+    val provinceId:Int,
 )
 
