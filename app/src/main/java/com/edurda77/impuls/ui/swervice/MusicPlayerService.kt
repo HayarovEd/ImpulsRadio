@@ -160,6 +160,7 @@ class MusicPlayerService : MediaSessionService() {
             }
             .build()
         val audioSessionId = (player as ExoPlayer).audioSessionId
+        Log.d("TEST AUDIOSESSION", "audioSessionId $audioSessionId")
         scope.launch {
             application.dataStore.edit { settings ->
                 settings[FIELD_SESSION_ID] = audioSessionId
