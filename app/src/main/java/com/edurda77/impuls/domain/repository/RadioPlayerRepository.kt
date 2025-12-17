@@ -10,7 +10,7 @@ interface RadioPlayerRepository {
         title: String,
         //track: String,
         radioUrl: String
-    )
+    ): Int
 
     suspend fun getMetaData(radioUrl: String): ResultWork<String, DataError.Network>
     fun checkPlayRadio(callback: (Boolean) -> Unit)

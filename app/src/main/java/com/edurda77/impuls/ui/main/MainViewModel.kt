@@ -73,6 +73,10 @@ class MainViewModel @Inject constructor(
                         title = mainEvent.name,
                         radioUrl = mainEvent.url
                     )
+                    /*_state.value.copy(
+                        sessionId = audioSession
+                    )
+                        .updateState()*/
                 }
                 _state.value.copy(
                     isPlayed = true

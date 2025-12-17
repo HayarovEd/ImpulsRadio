@@ -3,12 +3,14 @@ package com.edurda77.impuls.data.repository
 import com.edurda77.impuls.data.handler.handleResponse
 import com.edurda77.impuls.data.remote.CategoryDto
 import com.edurda77.impuls.data.remote.RadioDto
+import com.edurda77.impuls.data.remote.RadiosDtoCat
 import com.edurda77.impuls.domain.model.Province
 import com.edurda77.impuls.domain.model.RadioStation
 import com.edurda77.impuls.domain.repository.RemoteRepository
 import com.edurda77.impuls.domain.utils.DataError
 import com.edurda77.impuls.domain.utils.ResultWork
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -21,7 +23,7 @@ class RemoteRepositoryJsonImpl @Inject constructor(
 ) : RemoteRepository {
     override suspend fun getProvinces(): ResultWork<List<Province>, DataError.Network> {
         return handleResponse {
-            val response = httpClient.get("categories") {
+            val response = httpClient.get("http://10.222.222.174:8080/api/categories") {
                 contentType(ContentType.Application.Json)
             }.bodyAsText()
             val provinces = Json.decodeFromString<List<CategoryDto>>(response).map {
@@ -36,7 +38,7 @@ class RemoteRepositoryJsonImpl @Inject constructor(
 
     override suspend fun getRadioByProvince(idProvince: Int): ResultWork<List<RadioStation>, DataError.Network> {
         return handleResponse {
-            val response = httpClient.get("categories/$idProvince") {
+            val response = httpClient.get("http://10.222.222.174:8080/api/radios/category/$idProvince") {
                 contentType(ContentType.Application.Json)
             }.bodyAsText()
             val radios = Json.decodeFromString<List<RadioDto>>(response).map {

@@ -73,7 +73,7 @@ object ApiModule {
     @Singleton
     fun provideHttpClient(): HttpClient {
         return HttpClient(OkHttp) {
-            defaultRequest {  url("http//10.222.222.174:8080/api/")}
+       //     defaultRequest {  url("http//10.222.222.174:8080/api/")}
             install(HttpTimeout) {
                 connectTimeoutMillis = 100000
                 requestTimeoutMillis = 100000
