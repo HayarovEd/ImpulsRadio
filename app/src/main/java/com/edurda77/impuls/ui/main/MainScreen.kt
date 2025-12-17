@@ -136,7 +136,7 @@ fun MainScreen(
                 Row(
                     modifier = modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     IconButton(
                         modifier = modifier,
@@ -171,8 +171,8 @@ fun MainScreen(
                         }) {
                         Icon(
                             modifier = modifier.size(100.dp),
-                            imageVector = if (state.value.isPlayed) ImageVector.vectorResource(id = R.drawable.baseline_stop_circle) else ImageVector.vectorResource(
-                                id = R.drawable.baseline_play_circle_outline
+                            imageVector = if (state.value.isPlayed) ImageVector.vectorResource(id = R.drawable.play_circle_48) else ImageVector.vectorResource(
+                                id = R.drawable.stop_circle_48
                             ),
                             contentDescription = "",
                             tint = white
