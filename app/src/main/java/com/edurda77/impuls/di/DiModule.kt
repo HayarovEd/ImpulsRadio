@@ -26,7 +26,6 @@ abstract class DiModule {
     @Singleton
     abstract fun bindRepository(remoteRepositoryJsonImpl: RemoteRepositoryJsonImpl): RemoteRepository
 
-    @OptIn(UnstableApi::class)
     @Binds
     @Singleton
     abstract fun bindRadioRepository(radioPlayerRepositoryImpl: RadioPlayerRepositoryImpl): RadioPlayerRepository

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +32,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -116,7 +118,8 @@ fun MainScreen(
             )
             if (state.value.isEnableInternet) {
                 Spacer(modifier = modifier.height(10.dp))
-                val trackName = if (state.value.track== READ_ERROR_TRACK) stringResource(id = R.string.error_read_track) else state.value.track
+                val trackName =
+                    if (state.value.track == READ_ERROR_TRACK) stringResource(id = R.string.error_read_track) else state.value.track
                 Text(
                     modifier = modifier.fillMaxWidth(),
                     text = "${stringResource(id = R.string.now_is_played)} ${state.value.radioName}\n$trackName",
@@ -130,31 +133,66 @@ fun MainScreen(
             }
             Spacer(modifier = modifier.height(10.dp))
             if (state.value.isShowButton && state.value.isEnableInternet) {
-                IconButton(
-                    modifier = modifier.size(100.dp),
-                    onClick = {
-                        if (state.value.isPlayed) {
-                            onEvent(
-                                MainEvent.OnStop
-                            )
-                        } else {
-                            onEvent(
-                                MainEvent.OnPlay(
-                                    name = state.value.lastRadio.last().name,
-                                    url = state.value.lastRadio.last().url,
-                                )
-                            )
+                Row(
+                    modifier = modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    IconButton(
+                        modifier = modifier,
+                        onClick = {
+                            onEvent(MainEvent.SetLike(false))
                         }
-                    }) {
-                    Icon(
+                    ) {
+                        Icon(
+                            modifier = modifier.rotate(180f),
+                            imageVector = if (state.value.track == state.value.lastLikedSong && !state.value.isLiked) ImageVector.vectorResource(
+                                R.drawable.like_icon_filled
+                            ) else ImageVector.vectorResource(R.drawable.ic_like),
+                            contentDescription = "",
+                            tint = white
+                        )
+                    }
+                    IconButton(
                         modifier = modifier.size(100.dp),
-                        imageVector = if (state.value.isPlayed) ImageVector.vectorResource(id = R.drawable.baseline_stop_circle) else ImageVector.vectorResource(
-                            id = R.drawable.baseline_play_circle_outline
-                        ),
-                        contentDescription = "",
-                        tint = white
-                    )
+                        onClick = {
+                            if (state.value.isPlayed) {
+                                onEvent(
+                                    MainEvent.OnStop
+                                )
+                            } else {
+                                onEvent(
+                                    MainEvent.OnPlay(
+                                        name = state.value.lastRadio.last().name,
+                                        url = state.value.lastRadio.last().url,
+                                    )
+                                )
+                            }
+                        }) {
+                        Icon(
+                            modifier = modifier.size(100.dp),
+                            imageVector = if (state.value.isPlayed) ImageVector.vectorResource(id = R.drawable.baseline_stop_circle) else ImageVector.vectorResource(
+                                id = R.drawable.baseline_play_circle_outline
+                            ),
+                            contentDescription = "",
+                            tint = white
+                        )
 
+                    }
+                    IconButton(
+                        modifier = modifier,
+                        onClick = {
+                            onEvent(MainEvent.SetLike(true))
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (state.value.track == state.value.lastLikedSong && state.value.isLiked) ImageVector.vectorResource(
+                                R.drawable.like_icon_filled
+                            ) else ImageVector.vectorResource(R.drawable.ic_like),
+                            contentDescription = "",
+                            tint = white
+                        )
+                    }
                 }
                 Spacer(modifier = modifier.height(10.dp))
             }
@@ -165,7 +203,8 @@ fun MainScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = blue53
                 ),
-                onClick = onNavigateToProvince) {
+                onClick = onNavigateToProvince
+            ) {
                 Text(
                     text = stringResource(R.string.choise_radio),
                     style = TextStyle(

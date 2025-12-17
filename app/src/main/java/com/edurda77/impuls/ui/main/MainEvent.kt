@@ -6,4 +6,5 @@ sealed class MainEvent {
         val name:String,
         val url:String):MainEvent()
     data object OnStop : MainEvent()
+    class SetLike(val isLike: Boolean) : MainEvent()
 }

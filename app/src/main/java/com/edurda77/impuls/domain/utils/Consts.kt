@@ -5,6 +5,10 @@ const val POST_URL_CAT = "api.php?a=cats"
 const val POST_URL_RADIOS = "api.php?a=channel&c="
 const val PARSER_URL = "https://radio.impulsfm.ru/parser.php"
 
+const val NEW_BASE_URL = "http://10.222.222.174:8080/api/"
+
+
+
 
 const val MAIN_SCREEN = "main"
 const val PROVINCE_SCREEN = "province"

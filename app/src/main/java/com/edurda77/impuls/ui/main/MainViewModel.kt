@@ -6,6 +6,7 @@ import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
 import com.edurda77.impuls.domain.repository.ServiceRepository
+import com.edurda77.impuls.domain.usecase.LikeUseCase
 import com.edurda77.impuls.domain.utils.READ_ERROR_TRACK
 import com.edurda77.impuls.domain.utils.ResultWork
 import com.edurda77.impuls.ui.uikit.asUiText
@@ -23,7 +24,8 @@ class MainViewModel @Inject constructor(
     private val radioPlayerRepository: RadioPlayerRepository,
     private val dataStoreRepository: DataStoreRepository,
     private val cacheRepository: CacheRepository,
-    private val serviceRepository: ServiceRepository
+    private val serviceRepository: ServiceRepository,
+    private val likeUseCase: LikeUseCase,
 ) : ViewModel() {
 
     private var _state = MutableStateFlow(MainState())
@@ -90,6 +92,32 @@ class MainViewModel @Inject constructor(
                     isPlayed = false
                 )
                     .updateState()
+            }
+
+            is MainEvent.SetLike -> {
+                if (state.value.lastLikedSong != state.value.track) {
+                    viewModelScope.launch {
+                        when (val result = likeUseCase.invoke(
+                            song = state.value.track,
+                            isLike = mainEvent.isLike
+                        )) {
+                            is ResultWork.Error -> {
+                                _state.value.copy(
+                                    message = result.error.asUiText()
+                                )
+                                    .updateState()
+                            }
+
+                            is ResultWork.Success -> {
+                                _state.value.copy(
+                                    lastLikedSong = result.data.song,
+                                    isLiked = result.data.isLiked
+                                )
+                                    .updateState()
+                            }
+                        }
+                    }
+                }
             }
         }
     }

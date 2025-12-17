@@ -14,4 +14,6 @@ data class MainState (
     val isPlayed: Boolean = false,
     val isShowButton: Boolean = false,
     val isEnableInternet:Boolean = false,
+    val lastLikedSong: String = "",
+    val isLiked: Boolean = false
 )
