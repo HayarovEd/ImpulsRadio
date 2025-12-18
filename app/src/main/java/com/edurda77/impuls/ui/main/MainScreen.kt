@@ -118,8 +118,8 @@ fun MainScreen(
             )
             if (state.value.isEnableInternet) {
                 Spacer(modifier = modifier.height(10.dp))
-                val trackName =
-                    if (state.value.track == READ_ERROR_TRACK) stringResource(id = R.string.error_read_track) else state.value.track
+                val trackName = if (!state.value.isPlayed) ""
+                else if (state.value.track == READ_ERROR_TRACK) stringResource(id = R.string.error_read_track) else state.value.track
                 Text(
                     modifier = modifier.fillMaxWidth(),
                     text = "${stringResource(id = R.string.now_is_played)} ${state.value.radioName}\n$trackName",
