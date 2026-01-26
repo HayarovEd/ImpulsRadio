@@ -1,6 +1,5 @@
 package com.edurda77.impuls.di
 
-import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import com.edurda77.impuls.data.repository.CacheRepositoryImpl
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl
@@ -26,6 +25,7 @@ abstract class DiModule {
     @Singleton
     abstract fun bindRepository(remoteRepositoryJsonImpl: RemoteRepositoryJsonImpl): RemoteRepository
 
+    @UnstableApi
     @Binds
     @Singleton
     abstract fun bindRadioRepository(radioPlayerRepositoryImpl: RadioPlayerRepositoryImpl): RadioPlayerRepository

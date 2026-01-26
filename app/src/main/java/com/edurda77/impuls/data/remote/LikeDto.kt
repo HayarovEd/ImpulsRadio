@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class LikeDto(
-    @SerialName("createdAt")
+    @SerialName("created_at")
     val createdAt: String,
     @SerialName("id")
     val id: Int,

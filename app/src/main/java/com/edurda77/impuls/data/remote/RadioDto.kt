@@ -8,14 +8,10 @@ import kotlinx.serialization.Serializable
 data class RadioDto(
     @SerialName("categoryId")
     val categoryId: Int,
-    @SerialName("categoryName")
-    val categoryName: String,
     @SerialName("id")
     val id: Int,
     @SerialName("link")
     val link: String,
     @SerialName("name")
     val name: String,
-    @SerialName("createdAt")
-    val createdAt: String,
 )

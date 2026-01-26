@@ -36,7 +36,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.edurda77.impuls.R
 import com.edurda77.impuls.ui.theme.Pink40
 import com.edurda77.impuls.ui.theme.blue34
@@ -51,7 +52,7 @@ fun RadiosScreen(
     onNavigateBack: () -> Unit,
     onNavigateToMainScreen: () -> Unit,
 ) {
-    val state = viewModel.state.collectAsState()
+    val state = viewModel.state.collectAsStateWithLifecycle()
     val onEvent = viewModel::onEvent
 
     val snakeBarHostState = remember { SnackbarHostState() }

@@ -1,6 +1,6 @@
 package com.edurda77.impuls.domain.utils
 
-const val BASE_URL = "https://radio.impulsfm.ru/"
+const val BASE_URL = "https://mobile.radio.impulsfm.ru/api/"
 const val POST_URL_CAT = "api.php?a=cats"
 const val POST_URL_RADIOS = "api.php?a=channel&c="
 const val PARSER_URL = "https://radio.impulsfm.ru/parser.php"
