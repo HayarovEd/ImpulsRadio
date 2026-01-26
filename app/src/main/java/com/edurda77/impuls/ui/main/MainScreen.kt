@@ -141,13 +141,17 @@ fun MainScreen(
                 ) {
                     IconButton(
                         modifier = modifier,
+                        enabled = state.value.isPlayed,
                         onClick = {
                             onEvent(MainEvent.SetLike(false))
                         }
                     ) {
                         Icon(
                             modifier = modifier.rotate(180f),
-                            imageVector = if (state.value.track == state.value.lastLikedSong && !state.value.isLiked) ImageVector.vectorResource(
+                            imageVector = if (state.value.lastLikedSong.isNotBlank()
+                                && state.value.track == state.value.lastLikedSong
+                                && !state.value.isLiked
+                            ) ImageVector.vectorResource(
                                 R.drawable.like_icon_filled
                             ) else ImageVector.vectorResource(R.drawable.ic_like),
                             contentDescription = "",
@@ -182,12 +186,16 @@ fun MainScreen(
                     }
                     IconButton(
                         modifier = modifier,
+                        enabled = state.value.isPlayed,
                         onClick = {
                             onEvent(MainEvent.SetLike(true))
                         }
                     ) {
                         Icon(
-                            imageVector = if (state.value.track == state.value.lastLikedSong && state.value.isLiked) ImageVector.vectorResource(
+                            imageVector = if (state.value.lastLikedSong.isNotBlank()
+                                && state.value.track == state.value.lastLikedSong
+                                && state.value.isLiked
+                            ) ImageVector.vectorResource(
                                 R.drawable.like_icon_filled
                             ) else ImageVector.vectorResource(R.drawable.ic_like),
                             contentDescription = "",
