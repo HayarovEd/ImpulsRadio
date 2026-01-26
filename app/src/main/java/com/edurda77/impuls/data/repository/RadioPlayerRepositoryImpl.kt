@@ -104,7 +104,6 @@ class RadioPlayerRepositoryImpl @Inject constructor(
                 )
                 .build()
         val asd = (mediaPlayer as ExoPlayer).audioSessionId
-        Log.d("TEST AUDIOSESSION", "asd $asd")
         controllerFuture.addListener(
             {
 

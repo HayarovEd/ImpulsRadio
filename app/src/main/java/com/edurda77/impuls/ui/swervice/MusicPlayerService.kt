@@ -35,6 +35,7 @@ import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIE
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_TRACK
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_URL
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_SESSION_ID
+import com.edurda77.impuls.data.repository.RadioMetadataParser
 import com.edurda77.impuls.data.repository.dataStore
 import com.edurda77.impuls.domain.utils.DataError
 import com.edurda77.impuls.domain.utils.PARSER_URL
@@ -47,9 +48,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
-import java.net.UnknownHostException
 
 
 @UnstableApi
@@ -65,6 +64,8 @@ class MusicPlayerService : MediaSessionService() {
     private val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
 
     private val scope = CoroutineScope(Dispatchers.IO)
+
+    private val parser = RadioMetadataParser()
 
     private val renderersFactory = RenderersFactory { eventHandler, _, rendererListener, _, _ ->
         arrayOf(
@@ -111,16 +112,9 @@ class MusicPlayerService : MediaSessionService() {
                      mapped[FIELD_RADIO_URL] ?: ""
                 }.collect { collected ->
                     while (true) {
-                        when (val result = getMetaData(collected)) {
-                            is ResultWork.Error -> {
-                            }
-
-                            is ResultWork.Success -> {
-                                if (result.data.isNotBlank()) {
-                                    application.dataStore.edit { settings ->
-                                        settings[FIELD_RADIO_TRACK] = result.data
-                                    }
-                                }
+                        parser.getCurrentTrack(collected)?.let {
+                            application.dataStore.edit { settings ->
+                                settings[FIELD_RADIO_TRACK] = it
                             }
                         }
                         delay(5000)
@@ -236,14 +230,10 @@ class MusicPlayerService : MediaSessionService() {
         )
     }
 
-    @OptIn(UnstableApi::class) // MediaSessionService.Listener
+    @OptIn(UnstableApi::class)
     private inner class MediaSessionServiceListener : Listener {
 
-        /**
-         * This method is only required to be implemented on Android 12 or above when an attempt is made
-         * by a media controller to resume playback when the {@link MediaSessionService} is in the
-         * background.
-         */
+
         override fun onForegroundServiceStartNotAllowedException() {
             if (
                 Build.VERSION.SDK_INT >= 33 &&
