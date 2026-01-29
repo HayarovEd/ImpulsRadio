@@ -91,7 +91,7 @@ class MusicPlayerService : MediaSessionService() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
         super.onCreate()
-        this.setMediaNotificationProvider(object : MediaNotification.Provider{
+        this.setMediaNotificationProvider(object : MediaNotification.Provider {
             override fun createNotification(
                 mediaSession: MediaSession,
                 customLayout: ImmutableList<CommandButton>,
@@ -99,7 +99,7 @@ class MusicPlayerService : MediaSessionService() {
                 onNotificationChangedCallback: MediaNotification.Provider.Callback
             ): MediaNotification {
                 createNotification(mediaSession)
-                return MediaNotification(1,nBuilder.build())
+                return MediaNotification(1, nBuilder.build())
             }
 
             override fun handleCustomCommand(
@@ -110,25 +110,12 @@ class MusicPlayerService : MediaSessionService() {
                 TODO("Not yet implemented")
             }
         })
-        /*scope.launch {
-            application
-                .dataStore
-                .data
-                .map {mapped->
-                     mapped[FIELD_RADIO_URL] ?: ""
-                }.collect { collected ->
-                    while (true) {
-
-                        delay(5000)
-                    }
-                }
-        }*/
         player = ExoPlayer
             .Builder(this)
             .setRenderersFactory(renderersFactory)
             .setMediaSourceFactory(mediaSourceFactory)
             .build()
-        player?.addListener (
+        player?.addListener(
             object : Player.Listener {
                 override fun onEvents(player: Player, events: Player.Events) {
                     super.onEvents(player, events)
@@ -164,16 +151,17 @@ class MusicPlayerService : MediaSessionService() {
             scope.launch(Dispatchers.Main) {
                 while (true) {
                     val oldMediaItem = pl.currentMediaItem
-                    parser.getCurrentTrack(oldMediaItem?.localConfiguration?.uri.toString())?.let { song->
-                        Log.d("TEST AUDIOSESSION", "song $song")
-                        val newMediaItem = oldMediaItem
-                            ?.buildUpon()
-                            ?.setMediaId(song)
-                            ?.build()
-                        newMediaItem?.let {
-                            pl.replaceMediaItem(0, it)
+                    parser.getCurrentTrack(oldMediaItem?.localConfiguration?.uri.toString())
+                        ?.let { song ->
+                            Log.d("TEST AUDIOSESSION", "song $song")
+                            val newMediaItem = oldMediaItem
+                                ?.buildUpon()
+                                ?.setMediaId(song)
+                                ?.build()
+                            newMediaItem?.let {
+                                pl.replaceMediaItem(0, it)
+                            }
                         }
-                    }
                     delay(5000)
                 }
             }
@@ -205,7 +193,7 @@ class MusicPlayerService : MediaSessionService() {
 
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun  createNotification(session: MediaSession) {
+    fun createNotification(session: MediaSession) {
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val requestCode = 0
@@ -215,10 +203,17 @@ class MusicPlayerService : MediaSessionService() {
             intent,
             PendingIntent.FLAG_IMMUTABLE,
         )
-        val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(NotificationChannel("notification_id","Channel", NotificationManager.IMPORTANCE_LOW))
+        val notificationManager: NotificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(
+            NotificationChannel(
+                "notification_id",
+                "Channel",
+                NotificationManager.IMPORTANCE_LOW
+            )
+        )
 
-        nBuilder = NotificationCompat.Builder(this,"notification_id")
+        nBuilder = NotificationCompat.Builder(this, "notification_id")
             .setSmallIcon(R.drawable.logo_w)
             .setContentIntent(pendingIntent)
             .setContentText(player?.currentMediaItem?.mediaId)
@@ -254,7 +249,8 @@ class MusicPlayerService : MediaSessionService() {
                     //.setSmallIcon(R.drawable.logo_s)
                     .setContentTitle(getString(R.string.notification_content_title))
                     .setStyle(
-                        NotificationCompat.BigTextStyle().bigText(getString(R.string.notification_content_text))
+                        NotificationCompat.BigTextStyle()
+                            .bigText(getString(R.string.notification_content_text))
                     )
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setAutoCancel(true)
