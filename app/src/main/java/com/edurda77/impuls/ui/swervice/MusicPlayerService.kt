@@ -37,11 +37,13 @@ import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIE
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_SESSION_ID
 import com.edurda77.impuls.data.repository.RadioMetadataParser
 import com.edurda77.impuls.data.repository.dataStore
+import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.utils.DataError
 import com.edurda77.impuls.domain.utils.PARSER_URL
 import com.edurda77.impuls.domain.utils.ResultWork
 import com.edurda77.impuls.ui.MainActivity
 import com.google.common.collect.ImmutableList
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -49,13 +51,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
+import javax.inject.Inject
 
-
+@AndroidEntryPoint
 @UnstableApi
 class MusicPlayerService : MediaSessionService() {
 
 
-    private lateinit var player: Player
+    private var player: Player? = null
 
     private var session: MediaSession? = null
 
@@ -81,6 +84,9 @@ class MusicPlayerService : MediaSessionService() {
 
     private lateinit var nBuilder: NotificationCompat.Builder
 
+    @Inject
+    lateinit var dataStoreRepository: DataStoreRepository
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
@@ -104,7 +110,7 @@ class MusicPlayerService : MediaSessionService() {
                 TODO("Not yet implemented")
             }
         })
-        scope.launch {
+        /*scope.launch {
             application
                 .dataStore
                 .data
@@ -112,22 +118,17 @@ class MusicPlayerService : MediaSessionService() {
                      mapped[FIELD_RADIO_URL] ?: ""
                 }.collect { collected ->
                     while (true) {
-                        parser.getCurrentTrack(collected)?.let {
-                            application.dataStore.edit { settings ->
-                                settings[FIELD_RADIO_TRACK] = it
-                            }
-                        }
+
                         delay(5000)
                     }
                 }
-        }
-
+        }*/
         player = ExoPlayer
             .Builder(this)
             .setRenderersFactory(renderersFactory)
             .setMediaSourceFactory(mediaSourceFactory)
             .build()
-        player.addListener (
+        player?.addListener (
             object : Player.Listener {
                 override fun onEvents(player: Player, events: Player.Events) {
                     super.onEvents(player, events)
@@ -147,17 +148,34 @@ class MusicPlayerService : MediaSessionService() {
                 }
             }
         )
-        session = MediaSession
-            .Builder(this, player)
-            .also { builder ->
-                getSingleTopActivity()?.let { builder.setSessionActivity(it) }
+        player?.let { pl ->
+            session = MediaSession
+                .Builder(this, pl)
+                .also { builder ->
+                    getSingleTopActivity()?.let { builder.setSessionActivity(it) }
+                }
+                .build()
+            val audioSessionId = (pl as ExoPlayer).audioSessionId
+            scope.launch {
+                application.dataStore.edit { settings ->
+                    settings[FIELD_SESSION_ID] = audioSessionId
+                }
             }
-            .build()
-        val audioSessionId = (player as ExoPlayer).audioSessionId
-        Log.d("TEST AUDIOSESSION", "audioSessionId $audioSessionId")
-        scope.launch {
-            application.dataStore.edit { settings ->
-                settings[FIELD_SESSION_ID] = audioSessionId
+            scope.launch(Dispatchers.Main) {
+                while (true) {
+                    val oldMediaItem = pl.currentMediaItem
+                    parser.getCurrentTrack(oldMediaItem?.localConfiguration?.uri.toString())?.let { song->
+                        Log.d("TEST AUDIOSESSION", "song $song")
+                        val newMediaItem = oldMediaItem
+                            ?.buildUpon()
+                            ?.setMediaId(song)
+                            ?.build()
+                        newMediaItem?.let {
+                            pl.replaceMediaItem(0, it)
+                        }
+                    }
+                    delay(5000)
+                }
             }
         }
         setListener(MediaSessionServiceListener())
@@ -185,20 +203,6 @@ class MusicPlayerService : MediaSessionService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
 
-    private suspend fun getMetaData(radioUrl: String): ResultWork<String, DataError.Network> {
-        return withContext(Dispatchers.IO)  {
-            handleResponse {
-                val doc = Jsoup.connect(PARSER_URL)
-                    .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0")
-                    .data("text", radioUrl)
-                    .post()
-                val body = doc.body().html()
-                body
-            }
-        }
-    }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun  createNotification(session: MediaSession) {
@@ -217,6 +221,7 @@ class MusicPlayerService : MediaSessionService() {
         nBuilder = NotificationCompat.Builder(this,"notification_id")
             .setSmallIcon(R.drawable.logo_w)
             .setContentIntent(pendingIntent)
+            .setContentText(player?.currentMediaItem?.mediaId)
             .setStyle(MediaStyleNotificationHelper.MediaStyle(session))
 
     }
