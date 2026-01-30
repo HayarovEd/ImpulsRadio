@@ -30,27 +30,18 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
 import com.edurda77.impuls.R
-import com.edurda77.impuls.data.handler.handleResponse
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_IS_PLAY
-import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_TRACK
-import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_URL
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_SESSION_ID
 import com.edurda77.impuls.data.repository.RadioMetadataParser
 import com.edurda77.impuls.data.repository.dataStore
 import com.edurda77.impuls.domain.repository.DataStoreRepository
-import com.edurda77.impuls.domain.utils.DataError
-import com.edurda77.impuls.domain.utils.PARSER_URL
-import com.edurda77.impuls.domain.utils.ResultWork
 import com.edurda77.impuls.ui.MainActivity
 import com.google.common.collect.ImmutableList
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.jsoup.Jsoup
 import javax.inject.Inject
 
 @AndroidEntryPoint
