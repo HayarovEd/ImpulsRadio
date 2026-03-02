@@ -97,88 +97,26 @@ class MainViewModel @Inject constructor(
             }
 
             is MainEvent.SetLike -> {
-                if (state.value.lastLike==null) {
-                    _state.value.copy(
-                        loadingLike = true
-                    )
-                        .updateState()
-                    viewModelScope.launch {
-                        when (val result = likeUseCase.invoke(
-                            song = state.value.track,
-                            isLike = mainEvent.isLike
-                        )) {
-                            is ResultWork.Error -> {
-                                _state.value.copy(
-                                    message = result.error.asUiText(),
-                                    loadingLike = false
-                                )
-                                    .updateState()
-                            }
-
-                            is ResultWork.Success -> {
-                                _state.value.copy(
-                                    lastLike = result.data,
-                                    isLiked = result.data.isLiked,
-                                    loadingLike = false
-                                )
-                                    .updateState()
-                            }
-                        }
-                    }
+                if (state.value.lastLike == null) {
+                    setLike(mainEvent.isLike)
                 } else {
                     if (state.value.lastLike!!.song != state.value.track) {
-                        _state.value.copy(
-                            loadingLike = true
-                        )
-                            .updateState()
-                        viewModelScope.launch {
-                            when (val result = likeUseCase.invoke(
-                                song = state.value.track,
-                                isLike = mainEvent.isLike
-                            )) {
-                                is ResultWork.Error -> {
-                                    _state.value.copy(
-                                        message = result.error.asUiText(),
-                                        loadingLike = false
-                                    )
-                                        .updateState()
-                                }
-
-                                is ResultWork.Success -> {
-                                    _state.value.copy(
-                                        lastLike = result.data,
-                                        isLiked = result.data.isLiked,
-                                        loadingLike = false
-                                    )
-                                        .updateState()
-                                }
-                            }
-                        }
+                        setLike(mainEvent.isLike)
                     } else {
-                        _state.value.copy(
-                            loadingLike = true
-                        )
-                            .updateState()
-                        viewModelScope.launch {
-                            when (val result = deleteLikeUseCase.invoke(
-                                state.value.lastLike!!.id.toLong()
-                            )) {
-                                is ResultWork.Error -> {
-                                    _state.value.copy(
-                                        message = result.error.asUiText(),
-                                        loadingLike = false
-                                    )
-                                        .updateState()
-                                }
-
-                                is ResultWork.Success -> {
-                                    _state.value.copy(
-                                        lastLike = null,
-                                        isLiked = false,
-                                        loadingLike = false
-                                    )
-                                        .updateState()
-                                }
+                        state.value.lastLike?.let { like ->
+                            if (mainEvent.isLike && like.isLiked) {
+                                deleteLike(like.id)
+                            }
+                            if (!mainEvent.isLike && !like.isLiked) {
+                                deleteLike(like.id)
+                            }
+                            if (mainEvent.isLike && !like.isLiked) {
+                                deleteLike(like.id)
+                                setLike(true)
+                            }
+                            if (!mainEvent.isLike && like.isLiked) {
+                                deleteLike(like.id)
+                                setLike(false)
                             }
                         }
                     }
@@ -265,6 +203,67 @@ class MainViewModel @Inject constructor(
                 if (it.isNotBlank()) {
                     _state.value.copy(
                         isShowButton = true
+                    )
+                        .updateState()
+                }
+            }
+        }
+    }
+
+    private fun setLike(isLike: Boolean) {
+        viewModelScope.launch {
+            _state.value.copy(
+                loadingLike = true
+            )
+                .updateState()
+            viewModelScope.launch {
+                when (val result = likeUseCase.invoke(
+                    song = state.value.track,
+                    isLike = isLike
+                )) {
+                    is ResultWork.Error -> {
+                        _state.value.copy(
+                            message = result.error.asUiText(),
+                            loadingLike = false
+                        )
+                            .updateState()
+                    }
+
+                    is ResultWork.Success -> {
+                        _state.value.copy(
+                            lastLike = result.data,
+                            isLiked = result.data.isLiked,
+                            loadingLike = false
+                        )
+                            .updateState()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun deleteLike(likeId: Int) {
+        _state.value.copy(
+            loadingLike = true
+        )
+            .updateState()
+        viewModelScope.launch {
+            when (val result = deleteLikeUseCase.invoke(
+                likeId.toLong()
+            )) {
+                is ResultWork.Error -> {
+                    _state.value.copy(
+                        message = result.error.asUiText(),
+                        loadingLike = false
+                    )
+                        .updateState()
+                }
+
+                is ResultWork.Success -> {
+                    _state.value.copy(
+                        lastLike = null,
+                        isLiked = false,
+                        loadingLike = false
                     )
                         .updateState()
                 }
