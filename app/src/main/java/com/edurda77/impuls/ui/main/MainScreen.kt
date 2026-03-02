@@ -58,7 +58,6 @@ import com.edurda77.impuls.ui.uikit.SquareBarVisualizerRelease
 
 @Composable
 fun MainScreenRoot(
-    modifier: Modifier = Modifier,
     viewModel: MainViewModel = hiltViewModel(),
     onNavigateToProvince: () -> Unit,
 ) {
@@ -69,7 +68,6 @@ fun MainScreenRoot(
         onNavigateToProvince = onNavigateToProvince
     )
 }
-
 
 
 @Composable
@@ -157,7 +155,9 @@ private fun MainScreen(
                 ) {
                     IconButton(
                         modifier = modifier,
-                        enabled = state.isPlayed && state.track.isNotBlank(),
+                        enabled = state.isPlayed
+                                && state.track.isNotBlank()
+                                && !state.loadingLike,
                         onClick = {
                             onEvent(MainEvent.SetLike(false))
                         }
@@ -192,8 +192,8 @@ private fun MainScreen(
                         }) {
                         Icon(
                             modifier = modifier.size(100.dp),
-                            imageVector = if (state.isPlayed) ImageVector.vectorResource(id = R.drawable.play_circle_48) else ImageVector.vectorResource(
-                                id = R.drawable.stop_circle_48
+                            imageVector = if (state.isPlayed) ImageVector.vectorResource(id = R.drawable.stop_circle_48) else ImageVector.vectorResource(
+                                id = R.drawable.play_circle_48
                             ),
                             contentDescription = "",
                             tint = white
@@ -202,7 +202,9 @@ private fun MainScreen(
                     }
                     IconButton(
                         modifier = modifier,
-                        enabled = state.isPlayed && state.track.isNotBlank(),
+                        enabled = state.isPlayed
+                                && state.track.isNotBlank()
+                                && !state.loadingLike,
                         onClick = {
                             onEvent(MainEvent.SetLike(true))
                         }

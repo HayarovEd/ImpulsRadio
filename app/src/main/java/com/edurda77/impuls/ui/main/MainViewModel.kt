@@ -96,6 +96,10 @@ class MainViewModel @Inject constructor(
 
             is MainEvent.SetLike -> {
                 if (state.value.lastLikedSong != state.value.track) {
+                    _state.value.copy(
+                       loadingLike = true
+                    )
+                        .updateState()
                     viewModelScope.launch {
                         when (val result = likeUseCase.invoke(
                             song = state.value.track,
@@ -103,7 +107,8 @@ class MainViewModel @Inject constructor(
                         )) {
                             is ResultWork.Error -> {
                                 _state.value.copy(
-                                    message = result.error.asUiText()
+                                    message = result.error.asUiText(),
+                                    loadingLike = false
                                 )
                                     .updateState()
                             }
@@ -111,7 +116,8 @@ class MainViewModel @Inject constructor(
                             is ResultWork.Success -> {
                                 _state.value.copy(
                                     lastLikedSong = result.data.song,
-                                    isLiked = result.data.isLiked
+                                    isLiked = result.data.isLiked,
+                                    loadingLike = false
                                 )
                                     .updateState()
                             }

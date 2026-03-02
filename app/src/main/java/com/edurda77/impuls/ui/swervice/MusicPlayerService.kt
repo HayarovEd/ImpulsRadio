@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -141,18 +140,20 @@ class MusicPlayerService : MediaSessionService() {
             }
             scope.launch(Dispatchers.Main) {
                 while (true) {
-                    val oldMediaItem = pl.currentMediaItem
-                    parser.getCurrentTrack(oldMediaItem?.localConfiguration?.uri.toString())
-                        ?.let { song ->
-                            Log.d("TEST AUDIOSESSION", "song $song")
-                            val newMediaItem = oldMediaItem
-                                ?.buildUpon()
-                                ?.setMediaId(song)
-                                ?.build()
-                            newMediaItem?.let {
-                                pl.replaceMediaItem(0, it)
+                    if (pl.isPlaying) {
+                        val oldMediaItem = pl.currentMediaItem
+                        parser.getCurrentTrack(oldMediaItem?.localConfiguration?.uri.toString())
+                            ?.let { song ->
+                                Log.d("TEST AUDIOSESSION", "song $song")
+                                val newMediaItem = oldMediaItem
+                                    ?.buildUpon()
+                                    ?.setMediaId(song)
+                                    ?.build()
+                                newMediaItem?.let {
+                                    pl.replaceMediaItem(0, it)
+                                }
                             }
-                        }
+                    }
                     delay(5000)
                 }
             }
@@ -195,7 +196,7 @@ class MusicPlayerService : MediaSessionService() {
             PendingIntent.FLAG_IMMUTABLE,
         )
         val notificationManager: NotificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(
             NotificationChannel(
                 "notification_id",
