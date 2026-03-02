@@ -13,4 +13,6 @@ interface RemoteRepository {
         song: String,
         isLike: Boolean
     ): ResultWork<Like, DataError.Network>
+
+    suspend fun deleteLike(likeId: Long): ResultWork<Unit, DataError.Network>
 }

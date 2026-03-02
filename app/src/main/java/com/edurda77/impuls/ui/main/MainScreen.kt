@@ -164,8 +164,9 @@ private fun MainScreen(
                     ) {
                         Icon(
                             modifier = modifier.rotate(180f),
-                            imageVector = if (state.lastLikedSong.isNotBlank()
-                                && state.track == state.lastLikedSong
+                            imageVector = if (state.lastLike != null
+                                && state.lastLike.song.isNotBlank()
+                                && state.track == state.lastLike.song
                                 && !state.isLiked
                             ) ImageVector.vectorResource(
                                 R.drawable.like_icon_filled
@@ -210,8 +211,9 @@ private fun MainScreen(
                         }
                     ) {
                         Icon(
-                            imageVector = if (state.lastLikedSong.isNotBlank()
-                                && state.track == state.lastLikedSong
+                            imageVector = if (state.lastLike != null
+                                && state.lastLike.song.isNotBlank()
+                                && state.track == state.lastLike.song
                                 && state.isLiked
                             ) ImageVector.vectorResource(
                                 R.drawable.like_icon_filled

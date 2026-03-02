@@ -14,6 +14,7 @@ import com.edurda77.impuls.domain.utils.DataError
 import com.edurda77.impuls.domain.utils.ResultWork
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -79,6 +80,16 @@ class RemoteRepositoryJsonImpl @Inject constructor(
                 song = response.song,
                 isLiked = response.isLike
             )
+        }
+    }
+
+    override suspend fun deleteLike(
+       likeId: Long
+    ): ResultWork<Unit, DataError.Network> {
+        return handleResponse {
+            httpClient.delete("${BASE_URL}likes/$likeId") {
+                contentType(ContentType.Application.Json)
+            }
         }
     }
 }

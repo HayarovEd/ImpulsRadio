@@ -6,6 +6,7 @@ import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
 import com.edurda77.impuls.domain.repository.ServiceRepository
+import com.edurda77.impuls.domain.usecase.DeleteLikeUseCase
 import com.edurda77.impuls.domain.usecase.LikeUseCase
 import com.edurda77.impuls.domain.utils.READ_ERROR_TRACK
 import com.edurda77.impuls.domain.utils.ResultWork
@@ -26,6 +27,7 @@ class MainViewModel @Inject constructor(
     private val cacheRepository: CacheRepository,
     private val serviceRepository: ServiceRepository,
     private val likeUseCase: LikeUseCase,
+    private val deleteLikeUseCase: DeleteLikeUseCase,
 ) : ViewModel() {
 
     private var _state = MutableStateFlow(MainState())
@@ -95,9 +97,9 @@ class MainViewModel @Inject constructor(
             }
 
             is MainEvent.SetLike -> {
-                if (state.value.lastLikedSong != state.value.track) {
+                if (state.value.lastLike==null) {
                     _state.value.copy(
-                       loadingLike = true
+                        loadingLike = true
                     )
                         .updateState()
                     viewModelScope.launch {
@@ -115,11 +117,68 @@ class MainViewModel @Inject constructor(
 
                             is ResultWork.Success -> {
                                 _state.value.copy(
-                                    lastLikedSong = result.data.song,
+                                    lastLike = result.data,
                                     isLiked = result.data.isLiked,
                                     loadingLike = false
                                 )
                                     .updateState()
+                            }
+                        }
+                    }
+                } else {
+                    if (state.value.lastLike!!.song != state.value.track) {
+                        _state.value.copy(
+                            loadingLike = true
+                        )
+                            .updateState()
+                        viewModelScope.launch {
+                            when (val result = likeUseCase.invoke(
+                                song = state.value.track,
+                                isLike = mainEvent.isLike
+                            )) {
+                                is ResultWork.Error -> {
+                                    _state.value.copy(
+                                        message = result.error.asUiText(),
+                                        loadingLike = false
+                                    )
+                                        .updateState()
+                                }
+
+                                is ResultWork.Success -> {
+                                    _state.value.copy(
+                                        lastLike = result.data,
+                                        isLiked = result.data.isLiked,
+                                        loadingLike = false
+                                    )
+                                        .updateState()
+                                }
+                            }
+                        }
+                    } else {
+                        _state.value.copy(
+                            loadingLike = true
+                        )
+                            .updateState()
+                        viewModelScope.launch {
+                            when (val result = deleteLikeUseCase.invoke(
+                                state.value.lastLike!!.id.toLong()
+                            )) {
+                                is ResultWork.Error -> {
+                                    _state.value.copy(
+                                        message = result.error.asUiText(),
+                                        loadingLike = false
+                                    )
+                                        .updateState()
+                                }
+
+                                is ResultWork.Success -> {
+                                    _state.value.copy(
+                                        lastLike = null,
+                                        isLiked = false,
+                                        loadingLike = false
+                                    )
+                                        .updateState()
+                                }
                             }
                         }
                     }

@@ -51,5 +51,9 @@ class RemoteRepositoryImpl @Inject constructor() : RemoteRepository {
         return ResultWork.Error(DataError.Network.UNKNOWN)
     }
 
+    override suspend fun deleteLike(likeId: Long): ResultWork<Unit, DataError.Network> {
+        TODO("Not yet implemented")
+    }
+
 
 }
