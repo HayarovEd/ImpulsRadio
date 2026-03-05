@@ -16,12 +16,13 @@ android {
         minSdk = 24
         targetSdk = 36
         versionCode = 3
-        versionName = "3.06"
+        versionName = "3.07"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
+        setProperty("archivesBaseName", "Radio-$versionName")
     }
 
     buildTypes {
