@@ -2,6 +2,7 @@ package com.edurda77.impuls.ui.main
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -42,6 +43,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -136,8 +138,11 @@ private fun MainScreen(
                 val trackName = if (!state.isPlayed) ""
                 else if (state.track == READ_ERROR_TRACK) stringResource(id = R.string.error_read_track) else state.track
                 Text(
-                    modifier = modifier.fillMaxWidth(),
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .basicMarquee(),
                     text = "${stringResource(id = R.string.now_is_played)} ${state.radioName}\n$trackName",
+                    maxLines = 2,
                     style = TextStyle(
                         fontSize = 18.sp,
                         fontWeight = FontWeight(600),
