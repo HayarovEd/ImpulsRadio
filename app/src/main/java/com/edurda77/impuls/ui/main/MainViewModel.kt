@@ -77,6 +77,11 @@ class MainViewModel @Inject constructor(
                         title = mainEvent.name,
                         radioUrl = mainEvent.url
                     )
+                    cacheRepository.insertRadio(
+                        name = mainEvent.name,
+                        url = mainEvent.url,
+                        provinceId = mainEvent.provinceId
+                    )
                     /*_state.value.copy(
                         sessionId = audioSession
                     )

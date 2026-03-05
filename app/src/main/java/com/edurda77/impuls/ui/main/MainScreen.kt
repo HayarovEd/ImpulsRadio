@@ -187,6 +187,7 @@ private fun MainScreen(
                                     MainEvent.OnPlay(
                                         name = state.lastRadio.last().name,
                                         url = state.lastRadio.last().url,
+                                        provinceId = state.lastRadio.last().provinceId,
                                     )
                                 )
                             }
@@ -267,7 +268,8 @@ private fun MainScreen(
                                 onEvent(
                                     MainEvent.OnPlay(
                                         name = it.name,
-                                        url = it.url
+                                        url = it.url,
+                                        provinceId = it.provinceId
                                     )
                                 )
                             }
