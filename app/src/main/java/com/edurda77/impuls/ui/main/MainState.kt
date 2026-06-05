@@ -1,5 +1,6 @@
 package com.edurda77.impuls.ui.main
 
+import com.edurda77.impuls.domain.model.Like
 import com.edurda77.impuls.domain.model.RadioStation
 import com.edurda77.impuls.ui.uikit.UiText
 
@@ -14,4 +15,7 @@ data class MainState (
     val isPlayed: Boolean = false,
     val isShowButton: Boolean = false,
     val isEnableInternet:Boolean = false,
+    val lastLike: Like? = null,
+    val isLiked: Boolean = false,
+    val loadingLike: Boolean = false,
 )

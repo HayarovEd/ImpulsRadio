@@ -2,9 +2,11 @@ package com.edurda77.impuls.ui.main
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,10 +29,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -40,9 +43,11 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.edurda77.impuls.R
 import com.edurda77.impuls.domain.utils.READ_ERROR_TRACK
 import com.edurda77.impuls.ui.theme.Pink40
@@ -53,20 +58,33 @@ import com.edurda77.impuls.ui.uikit.ItemElement
 import com.edurda77.impuls.ui.uikit.SquareBarVisualizerRelease
 
 @Composable
-fun MainScreen(
-    modifier: Modifier = Modifier,
+fun MainScreenRoot(
     viewModel: MainViewModel = hiltViewModel(),
     onNavigateToProvince: () -> Unit,
 ) {
-    val state = viewModel.state.collectAsState()
-    val onEvent = viewModel::onEvent
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    MainScreen(
+        state = state,
+        onEvent = viewModel::onEvent,
+        onNavigateToProvince = onNavigateToProvince
+    )
+}
+
+
+@Composable
+private fun MainScreen(
+    modifier: Modifier = Modifier,
+    state: MainState,
+    onEvent: (MainEvent) -> Unit,
+    onNavigateToProvince: () -> Unit,
+) {
 
     val snakeBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    LaunchedEffect(key1 = state.value.message) {
-        if (state.value.message != null) {
+    LaunchedEffect(key1 = state.message) {
+        if (state.message != null) {
             snakeBarHostState.showSnackbar(
-                message = state.value.message!!.asString(context),
+                message = state.message.asString(context),
                 duration = SnackbarDuration.Short
             )
         }
@@ -76,7 +94,7 @@ fun MainScreen(
         containerColor = blue34,
         snackbarHost = { SnackbarHost(snakeBarHostState) },
         topBar = {
-            if (!state.value.isEnableInternet) {
+            if (!state.isEnableInternet) {
                 Text(
                     modifier = modifier
                         .statusBarsPadding()
@@ -93,9 +111,9 @@ fun MainScreen(
             }
         },
         bottomBar = {
-            if (state.value.sessionId != 0 && state.value.isPlayed) {
+            if (state.sessionId != 0 && state.isPlayed) {
                 SquareBarVisualizerRelease(
-                    audioSessionId = state.value.sessionId
+                    audioSessionId = state.sessionId
                 )
             }
         }
@@ -114,12 +132,16 @@ fun MainScreen(
                 contentDescription = "",
                 contentScale = ContentScale.FillWidth
             )
-            if (state.value.isEnableInternet) {
+            if (state.isEnableInternet) {
                 Spacer(modifier = modifier.height(10.dp))
-                val trackName = if (state.value.track== READ_ERROR_TRACK) stringResource(id = R.string.error_read_track) else state.value.track
+                val trackName = if (!state.isPlayed) ""
+                else if (state.track == READ_ERROR_TRACK) stringResource(id = R.string.error_read_track) else state.track
                 Text(
-                    modifier = modifier.fillMaxWidth(),
-                    text = "${stringResource(id = R.string.now_is_played)} ${state.value.radioName}\n$trackName",
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .basicMarquee(),
+                    text = "${stringResource(id = R.string.now_is_played)} ${state.radioName}\n$trackName",
+                    maxLines = 2,
                     style = TextStyle(
                         fontSize = 18.sp,
                         fontWeight = FontWeight(600),
@@ -129,32 +151,82 @@ fun MainScreen(
                 )
             }
             Spacer(modifier = modifier.height(10.dp))
-            if (state.value.isShowButton && state.value.isEnableInternet) {
-                IconButton(
-                    modifier = modifier.size(100.dp),
-                    onClick = {
-                        if (state.value.isPlayed) {
-                            onEvent(
-                                MainEvent.OnStop
-                            )
-                        } else {
-                            onEvent(
-                                MainEvent.OnPlay(
-                                    name = state.value.lastRadio.last().name,
-                                    url = state.value.lastRadio.last().url,
-                                )
-                            )
+            if (state.isShowButton && state.isEnableInternet) {
+                Row(
+                    modifier = modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    IconButton(
+                        modifier = modifier,
+                        enabled = state.isPlayed
+                                && state.track.isNotBlank()
+                                && !state.loadingLike,
+                        onClick = {
+                            onEvent(MainEvent.SetLike(false))
                         }
-                    }) {
-                    Icon(
+                    ) {
+                        Icon(
+                            modifier = modifier.rotate(180f),
+                            imageVector = if (state.lastLike != null
+                                && state.lastLike.song.isNotBlank()
+                                && state.track == state.lastLike.song
+                                && !state.isLiked
+                            ) ImageVector.vectorResource(
+                                R.drawable.like_icon_filled
+                            ) else ImageVector.vectorResource(R.drawable.ic_like),
+                            contentDescription = "",
+                            tint = white
+                        )
+                    }
+                    IconButton(
                         modifier = modifier.size(100.dp),
-                        imageVector = if (state.value.isPlayed) ImageVector.vectorResource(id = R.drawable.baseline_stop_circle) else ImageVector.vectorResource(
-                            id = R.drawable.baseline_play_circle_outline
-                        ),
-                        contentDescription = "",
-                        tint = white
-                    )
+                        onClick = {
+                            if (state.isPlayed) {
+                                onEvent(
+                                    MainEvent.OnStop
+                                )
+                            } else {
+                                onEvent(
+                                    MainEvent.OnPlay(
+                                        name = state.lastRadio.last().name,
+                                        url = state.lastRadio.last().url,
+                                        provinceId = state.lastRadio.last().provinceId,
+                                    )
+                                )
+                            }
+                        }) {
+                        Icon(
+                            modifier = modifier.size(100.dp),
+                            imageVector = if (state.isPlayed) ImageVector.vectorResource(id = R.drawable.stop_circle_48) else ImageVector.vectorResource(
+                                id = R.drawable.play_circle_48
+                            ),
+                            contentDescription = "",
+                            tint = white
+                        )
 
+                    }
+                    IconButton(
+                        modifier = modifier,
+                        enabled = state.isPlayed
+                                && state.track.isNotBlank()
+                                && !state.loadingLike,
+                        onClick = {
+                            onEvent(MainEvent.SetLike(true))
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (state.lastLike != null
+                                && state.lastLike.song.isNotBlank()
+                                && state.track == state.lastLike.song
+                                && state.isLiked
+                            ) ImageVector.vectorResource(
+                                R.drawable.like_icon_filled
+                            ) else ImageVector.vectorResource(R.drawable.ic_like),
+                            contentDescription = "",
+                            tint = white
+                        )
+                    }
                 }
                 Spacer(modifier = modifier.height(10.dp))
             }
@@ -165,7 +237,8 @@ fun MainScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = blue53
                 ),
-                onClick = onNavigateToProvince) {
+                onClick = onNavigateToProvince
+            ) {
                 Text(
                     text = stringResource(R.string.choise_radio),
                     style = TextStyle(
@@ -186,20 +259,21 @@ fun MainScreen(
                     color = white
                 )
             )
-            if (state.value.isEnableInternet) {
+            if (state.isEnableInternet) {
                 Spacer(modifier = modifier.height(5.dp))
                 LazyColumn(
                     modifier = modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(15.dp)
                 ) {
-                    items(state.value.lastRadio) {
+                    items(state.lastRadio) {
                         ItemElement(
                             name = it.name,
                             onClick = {
                                 onEvent(
                                     MainEvent.OnPlay(
                                         name = it.name,
-                                        url = it.url
+                                        url = it.url,
+                                        provinceId = it.provinceId
                                     )
                                 )
                             }
@@ -209,4 +283,30 @@ fun MainScreen(
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun Preview() {
+    MainScreen(
+        state = MainState(),
+        onEvent = {},
+        onNavigateToProvince = {}
+    )
+}
+
+@Preview
+@Composable
+private fun Preview1() {
+    MainScreen(
+        state = MainState(
+            isPlayed = true,
+            isShowButton = true,
+            isEnableInternet = true,
+            radioName = "Impuls",
+            track = "artist - song"
+        ),
+        onEvent = {},
+        onNavigateToProvince = {}
+    )
 }

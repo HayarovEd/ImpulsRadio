@@ -1,11 +1,10 @@
 package com.edurda77.impuls.di
 
-import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import com.edurda77.impuls.data.repository.CacheRepositoryImpl
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl
 import com.edurda77.impuls.data.repository.RadioPlayerRepositoryImpl
-import com.edurda77.impuls.data.repository.RemoteRepositoryImpl
+import com.edurda77.impuls.data.repository.RemoteRepositoryJsonImpl
 import com.edurda77.impuls.data.repository.ServiceRepositoryImpl
 import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
@@ -24,9 +23,9 @@ abstract class DiModule {
 
     @Binds
     @Singleton
-    abstract fun bindRepository(remoteRepositoryImpl: RemoteRepositoryImpl): RemoteRepository
+    abstract fun bindRepository(remoteRepositoryJsonImpl: RemoteRepositoryJsonImpl): RemoteRepository
 
-    @OptIn(UnstableApi::class)
+    @UnstableApi
     @Binds
     @Singleton
     abstract fun bindRadioRepository(radioPlayerRepositoryImpl: RadioPlayerRepositoryImpl): RadioPlayerRepository

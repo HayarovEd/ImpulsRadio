@@ -3,6 +3,7 @@ package com.edurda77.impuls.data.repository
 import com.edurda77.impuls.data.handler.handleResponse
 import com.edurda77.impuls.data.mapper.convertToCategories
 import com.edurda77.impuls.data.mapper.convertToRadios
+import com.edurda77.impuls.domain.model.Like
 import com.edurda77.impuls.domain.model.Province
 import com.edurda77.impuls.domain.model.RadioStation
 import com.edurda77.impuls.domain.repository.RemoteRepository
@@ -40,6 +41,18 @@ class RemoteRepositoryImpl @Inject constructor() : RemoteRepository {
                 radios
             }
         }
+    }
+
+    override suspend fun setLike(
+        song: String,
+        isLike: Boolean
+    ): ResultWork<Like, DataError.Network> {
+        //TODO not released
+        return ResultWork.Error(DataError.Network.UNKNOWN)
+    }
+
+    override suspend fun deleteLike(likeId: Long): ResultWork<Unit, DataError.Network> {
+        TODO("Not yet implemented")
     }
 
 

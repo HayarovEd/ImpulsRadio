@@ -43,7 +43,7 @@ class DataStoreRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun setTrack(track:String) {
+    /*override suspend fun setTrack(track:String) {
         application.dataStore.edit { settings ->
             settings[FIELD_RADIO_TRACK] = track
         }
@@ -53,7 +53,7 @@ class DataStoreRepositoryImpl @Inject constructor(
         return application.dataStore.data.map {
             it[FIELD_RADIO_TRACK]?:""
         }
-    }
+    }*/
 
     override suspend fun setRadioName(name:String) {
         application.dataStore.edit { settings ->
@@ -94,7 +94,7 @@ class DataStoreRepositoryImpl @Inject constructor(
 
     companion object {
         val FIELD_RADIO_URL = stringPreferencesKey(RADIO_URL)
-        val FIELD_RADIO_TRACK = stringPreferencesKey(RADIO_TRACK)
+        //val FIELD_RADIO_TRACK = stringPreferencesKey(RADIO_TRACK)
         val FIELD_RADIO_NAME = stringPreferencesKey(RADIO_NAME)
         val FIELD_SESSION_ID = intPreferencesKey(SESSION_ID)
         val FIELD_IS_PLAY = booleanPreferencesKey(IS_PLAY)

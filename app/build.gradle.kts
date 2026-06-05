@@ -4,23 +4,25 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.jetbrains.kotlin.serialization)
 }
 
 android {
     namespace = "com.edurda77.impuls"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.edurda77.impuls"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 3
-        versionName = "3.01"
+        versionName = "3.08"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
+        setProperty("archivesBaseName", "Radio-$versionName")
     }
 
     buildTypes {
@@ -36,12 +38,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     buildFeatures {
         compose = true
     }
+}
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {
@@ -89,5 +91,13 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
+
+    //ktor
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.andriod)
 
 }

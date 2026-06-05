@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -30,33 +29,26 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
 import com.edurda77.impuls.R
-import com.edurda77.impuls.data.handler.handleResponse
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_IS_PLAY
-import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_TRACK
-import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_RADIO_URL
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl.Companion.FIELD_SESSION_ID
+import com.edurda77.impuls.data.repository.RadioMetadataParser
 import com.edurda77.impuls.data.repository.dataStore
-import com.edurda77.impuls.domain.utils.DataError
-import com.edurda77.impuls.domain.utils.PARSER_URL
-import com.edurda77.impuls.domain.utils.ResultWork
+import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.ui.MainActivity
 import com.google.common.collect.ImmutableList
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.jsoup.HttpStatusException
-import org.jsoup.Jsoup
-import java.net.UnknownHostException
+import javax.inject.Inject
 
-
+@AndroidEntryPoint
 @UnstableApi
 class MusicPlayerService : MediaSessionService() {
 
 
-    private lateinit var player: Player
+    private var player: Player? = null
 
     private var session: MediaSession? = null
 
@@ -65,6 +57,8 @@ class MusicPlayerService : MediaSessionService() {
     private val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
 
     private val scope = CoroutineScope(Dispatchers.IO)
+
+    private val parser = RadioMetadataParser()
 
     private val renderersFactory = RenderersFactory { eventHandler, _, rendererListener, _, _ ->
         arrayOf(
@@ -80,11 +74,14 @@ class MusicPlayerService : MediaSessionService() {
 
     private lateinit var nBuilder: NotificationCompat.Builder
 
+    @Inject
+    lateinit var dataStoreRepository: DataStoreRepository
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
         super.onCreate()
-        this.setMediaNotificationProvider(object : MediaNotification.Provider{
+        this.setMediaNotificationProvider(object : MediaNotification.Provider {
             override fun createNotification(
                 mediaSession: MediaSession,
                 customLayout: ImmutableList<CommandButton>,
@@ -92,7 +89,7 @@ class MusicPlayerService : MediaSessionService() {
                 onNotificationChangedCallback: MediaNotification.Provider.Callback
             ): MediaNotification {
                 createNotification(mediaSession)
-                return MediaNotification(1,nBuilder.build())
+                return MediaNotification(1, nBuilder.build())
             }
 
             override fun handleCustomCommand(
@@ -103,37 +100,12 @@ class MusicPlayerService : MediaSessionService() {
                 TODO("Not yet implemented")
             }
         })
-        scope.launch {
-            application
-                .dataStore
-                .data
-                .map {mapped->
-                     mapped[FIELD_RADIO_URL] ?: ""
-                }.collect { collected ->
-                    while (true) {
-                        when (val result = getMetaData(collected)) {
-                            is ResultWork.Error -> {
-                            }
-
-                            is ResultWork.Success -> {
-                                if (result.data.isNotBlank()) {
-                                    application.dataStore.edit { settings ->
-                                        settings[FIELD_RADIO_TRACK] = result.data
-                                    }
-                                }
-                            }
-                        }
-                        delay(5000)
-                    }
-                }
-        }
-
         player = ExoPlayer
             .Builder(this)
             .setRenderersFactory(renderersFactory)
             .setMediaSourceFactory(mediaSourceFactory)
             .build()
-        player.addListener (
+        player?.addListener(
             object : Player.Listener {
                 override fun onEvents(player: Player, events: Player.Events) {
                     super.onEvents(player, events)
@@ -153,16 +125,37 @@ class MusicPlayerService : MediaSessionService() {
                 }
             }
         )
-        session = MediaSession
-            .Builder(this, player)
-            .also { builder ->
-                getSingleTopActivity()?.let { builder.setSessionActivity(it) }
+        player?.let { pl ->
+            session = MediaSession
+                .Builder(this, pl)
+                .also { builder ->
+                    getSingleTopActivity()?.let { builder.setSessionActivity(it) }
+                }
+                .build()
+            val audioSessionId = (pl as ExoPlayer).audioSessionId
+            scope.launch {
+                application.dataStore.edit { settings ->
+                    settings[FIELD_SESSION_ID] = audioSessionId
+                }
             }
-            .build()
-        val audioSessionId = (player as ExoPlayer).audioSessionId
-        scope.launch {
-            application.dataStore.edit { settings ->
-                settings[FIELD_SESSION_ID] = audioSessionId
+            scope.launch(Dispatchers.Main) {
+                while (true) {
+                    if (pl.isPlaying) {
+                        val oldMediaItem = pl.currentMediaItem
+                        parser.getCurrentTrack(oldMediaItem?.localConfiguration?.uri.toString())
+                            ?.let { song ->
+                                Log.d("TEST AUDIOSESSION", "song $song")
+                                val newMediaItem = oldMediaItem
+                                    ?.buildUpon()
+                                    ?.setMediaId(song)
+                                    ?.build()
+                                newMediaItem?.let {
+                                    pl.replaceMediaItem(0, it)
+                                }
+                            }
+                    }
+                    delay(5000)
+                }
             }
         }
         setListener(MediaSessionServiceListener())
@@ -190,23 +183,9 @@ class MusicPlayerService : MediaSessionService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
 
-    private suspend fun getMetaData(radioUrl: String): ResultWork<String, DataError.Network> {
-        return withContext(Dispatchers.IO)  {
-            handleResponse {
-                val doc = Jsoup.connect(PARSER_URL)
-                    .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0")
-                    .data("text", radioUrl)
-                    .post()
-                val body = doc.body().html()
-                body
-            }
-        }
-    }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun  createNotification(session: MediaSession) {
+    fun createNotification(session: MediaSession) {
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val requestCode = 0
@@ -216,12 +195,20 @@ class MusicPlayerService : MediaSessionService() {
             intent,
             PendingIntent.FLAG_IMMUTABLE,
         )
-        val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(NotificationChannel("notification_id","Channel", NotificationManager.IMPORTANCE_LOW))
+        val notificationManager: NotificationManager =
+            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(
+            NotificationChannel(
+                "notification_id",
+                "Channel",
+                NotificationManager.IMPORTANCE_LOW
+            )
+        )
 
-        nBuilder = NotificationCompat.Builder(this,"notification_id")
+        nBuilder = NotificationCompat.Builder(this, "notification_id")
             .setSmallIcon(R.drawable.logo_w)
             .setContentIntent(pendingIntent)
+            .setContentText(player?.currentMediaItem?.mediaId)
             .setStyle(MediaStyleNotificationHelper.MediaStyle(session))
 
     }
@@ -235,14 +222,10 @@ class MusicPlayerService : MediaSessionService() {
         )
     }
 
-    @OptIn(UnstableApi::class) // MediaSessionService.Listener
+    @OptIn(UnstableApi::class)
     private inner class MediaSessionServiceListener : Listener {
 
-        /**
-         * This method is only required to be implemented on Android 12 or above when an attempt is made
-         * by a media controller to resume playback when the {@link MediaSessionService} is in the
-         * background.
-         */
+
         override fun onForegroundServiceStartNotAllowedException() {
             if (
                 Build.VERSION.SDK_INT >= 33 &&
@@ -258,7 +241,8 @@ class MusicPlayerService : MediaSessionService() {
                     //.setSmallIcon(R.drawable.logo_s)
                     .setContentTitle(getString(R.string.notification_content_title))
                     .setStyle(
-                        NotificationCompat.BigTextStyle().bigText(getString(R.string.notification_content_text))
+                        NotificationCompat.BigTextStyle()
+                            .bigText(getString(R.string.notification_content_text))
                     )
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setAutoCancel(true)
