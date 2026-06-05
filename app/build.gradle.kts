@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
@@ -9,20 +8,20 @@ plugins {
 
 android {
     namespace = "com.edurda77.impuls"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.edurda77.impuls"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 3
-        versionName = "3.08"
+        versionName = "3.09"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
-        setProperty("archivesBaseName", "Radio-$versionName")
+       // setProperty("archivesBaseName", "Radio-$versionName")
     }
 
     buildTypes {
@@ -41,9 +40,6 @@ android {
     buildFeatures {
         compose = true
     }
-}
-kotlin {
-    jvmToolchain(17)
 }
 
 dependencies {
@@ -73,6 +69,7 @@ dependencies {
     //Dagger
     implementation (libs.hilt.android)
     ksp (libs.google.hilt.compiler)
+    ksp (libs.kotlinx.metadata.jvm)
     implementation (libs.androidx.hilt.navigation.compose)
 
     implementation (libs.accompanist.systemuicontroller)
