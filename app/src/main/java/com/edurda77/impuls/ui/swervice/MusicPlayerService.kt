@@ -8,21 +8,15 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.annotation.OptIn
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.TaskStackBuilder
 import androidx.datastore.preferences.core.edit
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.RenderersFactory
-import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
-import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaNotification
 import androidx.media3.session.MediaSession
@@ -37,9 +31,10 @@ import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.ui.MainActivity
 import com.google.common.collect.ImmutableList
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -47,134 +42,129 @@ import javax.inject.Inject
 @UnstableApi
 class MusicPlayerService : MediaSessionService() {
 
-
-    private var player: Player? = null
-
     private var session: MediaSession? = null
-
-    private val dataSourceFactory = DefaultHttpDataSource.Factory()
-
-    private val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
-
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private var metadataJob: Job? = null
 
     private val parser = RadioMetadataParser()
 
-    private val renderersFactory = RenderersFactory { eventHandler, _, rendererListener, _, _ ->
-        arrayOf(
-            MediaCodecAudioRenderer(
-                this,
-                MediaCodecSelector.DEFAULT,
-                eventHandler,
-                rendererListener
-            )
-
-        )
-    }
-
-    private lateinit var nBuilder: NotificationCompat.Builder
+    @Inject
+    lateinit var player: Player
 
     @Inject
     lateinit var dataStoreRepository: DataStoreRepository
 
-
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
         super.onCreate()
-        this.setMediaNotificationProvider(object : MediaNotification.Provider {
+        setupNotificationProvider()
+        setupPlayer()
+        setupMediaSession()
+        setListener(MediaSessionServiceListener())
+    }
+
+    private fun setupNotificationProvider() {
+        setMediaNotificationProvider(object : MediaNotification.Provider {
             override fun createNotification(
                 mediaSession: MediaSession,
                 customLayout: ImmutableList<CommandButton>,
                 actionFactory: MediaNotification.ActionFactory,
                 onNotificationChangedCallback: MediaNotification.Provider.Callback
             ): MediaNotification {
-                createNotification(mediaSession)
-                return MediaNotification(1, nBuilder.build())
+                return MediaNotification(NOTIFICATION_ID_PLAYBACK, buildPlaybackNotification(mediaSession))
             }
 
-            override fun handleCustomCommand(
-                session: MediaSession,
-                action: String,
-                extras: Bundle
-            ): Boolean {
-                TODO("Not yet implemented")
+            override fun handleCustomCommand(session: MediaSession, action: String, extras: Bundle) = false
+
+            override fun getNotificationChannelInfo(): MediaNotification.Provider.NotificationChannelInfo {
+                return MediaNotification.Provider.NotificationChannelInfo(CHANNEL_ID_PLAYBACK, "Playback")
             }
         })
-        player = ExoPlayer
-            .Builder(this)
-            .setRenderersFactory(renderersFactory)
-            .setMediaSourceFactory(mediaSourceFactory)
-            .build()
-        player?.addListener(
-            object : Player.Listener {
-                override fun onEvents(player: Player, events: Player.Events) {
-                    super.onEvents(player, events)
-                    if (player.isPlaying) {
-                        scope.launch {
-                            application.dataStore.edit { settings ->
-                                settings[FIELD_IS_PLAY] = true
-                            }
-                        }
-                    } else {
-                        scope.launch {
-                            application.dataStore.edit { settings ->
-                                settings[FIELD_IS_PLAY] = false
-                            }
-                        }
-                    }
-                }
-            }
-        )
-        player?.let { pl ->
-            session = MediaSession
-                .Builder(this, pl)
-                .also { builder ->
-                    getSingleTopActivity()?.let { builder.setSessionActivity(it) }
-                }
-                .build()
-            val audioSessionId = (pl as ExoPlayer).audioSessionId
-            scope.launch {
-                application.dataStore.edit { settings ->
-                    settings[FIELD_SESSION_ID] = audioSessionId
-                }
-            }
-            scope.launch(Dispatchers.Main) {
-                while (true) {
-                    if (pl.isPlaying) {
-                        val oldMediaItem = pl.currentMediaItem
-                        parser.getCurrentTrack(oldMediaItem?.localConfiguration?.uri.toString())
-                            ?.let { song ->
-                                Log.d("TEST AUDIOSESSION", "song $song")
-                                val newMediaItem = oldMediaItem
-                                    ?.buildUpon()
-                                    ?.setMediaId(song)
-                                    ?.build()
-                                newMediaItem?.let {
-                                    pl.replaceMediaItem(0, it)
-                                }
-                            }
-                    }
-                    delay(5000)
-                }
-            }
-        }
-        setListener(MediaSessionServiceListener())
     }
 
+    private fun setupPlayer() {
+        player.addListener(object : Player.Listener {
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                updatePlaybackState(isPlaying)
+                if (isPlaying) startMetadataPolling() else stopMetadataPolling()
+            }
+        })
+    }
+
+    private fun setupMediaSession() {
+        session = MediaSession.Builder(this, player)
+            .setSessionActivity(getSingleTopActivity())
+            .build()
+
+        val audioSessionId = (player as ExoPlayer).audioSessionId
+        lifecycleScope.launch(Dispatchers.IO) {
+            application.dataStore.edit { it[FIELD_SESSION_ID] = audioSessionId }
+        }
+    }
+
+    private fun updatePlaybackState(isPlaying: Boolean) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            application.dataStore.edit { it[FIELD_IS_PLAY] = isPlaying }
+        }
+    }
+
+    private fun startMetadataPolling() {
+        metadataJob?.cancel()
+        metadataJob = lifecycleScope.launch(Dispatchers.Main) {
+            while (isActive) {
+                val pl = player
+                if (pl.isPlaying) {
+                    val currentUri = pl.currentMediaItem?.localConfiguration?.uri.toString()
+                    parser.getCurrentTrack(currentUri)?.let { song ->
+                        val currentMediaItem = pl.currentMediaItem
+                        if (currentMediaItem != null && currentMediaItem.mediaId != song) {
+                            val newItem = currentMediaItem.buildUpon().setMediaId(song).build()
+                            pl.replaceMediaItem(pl.currentMediaItemIndex, newItem)
+                        }
+                    }
+                }
+                delay(5000)
+            }
+        }
+    }
+
+    private fun stopMetadataPolling() {
+        metadataJob?.cancel()
+        metadataJob = null
+    }
+
+    private fun buildPlaybackNotification(session: MediaSession): android.app.Notification {
+        ensureNotificationChannel(CHANNEL_ID_PLAYBACK, "Playback", NotificationManager.IMPORTANCE_LOW)
+        
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+        return NotificationCompat.Builder(this, CHANNEL_ID_PLAYBACK)
+            .setSmallIcon(R.drawable.logo_w)
+            .setContentIntent(pendingIntent)
+            .setContentText(player.currentMediaItem?.mediaId)
+            .setStyle(MediaStyleNotificationHelper.MediaStyle(session))
+            .build()
+    }
+
+    private fun ensureNotificationChannel(id: String, name: String, importance: Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            if (manager.getNotificationChannel(id) == null) {
+                manager.createNotificationChannel(NotificationChannel(id, name, importance))
+            }
+        }
+    }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        val player = session?.player!!
-        if (!player.playWhenReady
-            || player.mediaItemCount == 0
-            || player.playbackState == Player.STATE_ENDED
-        ) {
+        if (!player.playWhenReady || player.mediaItemCount == 0 || player.playbackState == Player.STATE_ENDED) {
             stopSelf()
         }
     }
 
     override fun onDestroy() {
+        metadataJob?.cancel()
         session?.run {
-            player.release()
             release()
             session = null
         }
@@ -183,103 +173,43 @@ class MusicPlayerService : MediaSessionService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
 
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun createNotification(session: MediaSession) {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        val requestCode = 0
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            requestCode,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE,
-        )
-        val notificationManager: NotificationManager =
-            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(
-            NotificationChannel(
-                "notification_id",
-                "Channel",
-                NotificationManager.IMPORTANCE_LOW
-            )
-        )
-
-        nBuilder = NotificationCompat.Builder(this, "notification_id")
-            .setSmallIcon(R.drawable.logo_w)
-            .setContentIntent(pendingIntent)
-            .setContentText(player?.currentMediaItem?.mediaId)
-            .setStyle(MediaStyleNotificationHelper.MediaStyle(session))
-
-    }
-
-    private fun getSingleTopActivity(): PendingIntent? {
+    private fun getSingleTopActivity(): PendingIntent {
         return PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, MainActivity::class.java),
-            IMMUTABLE_FLAG or PendingIntent.FLAG_UPDATE_CURRENT
+            this, 0, Intent(this, MainActivity::class.java),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
 
     @OptIn(UnstableApi::class)
     private inner class MediaSessionServiceListener : Listener {
-
-
         override fun onForegroundServiceStartNotAllowedException() {
-            if (
-                Build.VERSION.SDK_INT >= 33 &&
-                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                return
-            }
-            val notificationManagerCompat = NotificationManagerCompat.from(this@MusicPlayerService)
-            ensureNotificationChannel(notificationManagerCompat)
-            val builder =
-                NotificationCompat.Builder(this@MusicPlayerService, CHANNEL_ID)
-                    //.setSmallIcon(R.drawable.logo_s)
-                    .setContentTitle(getString(R.string.notification_content_title))
-                    .setStyle(
-                        NotificationCompat.BigTextStyle()
-                            .bigText(getString(R.string.notification_content_text))
-                    )
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                    .setAutoCancel(true)
-                    .also { builder -> getBackStackedActivity()?.let { builder.setContentIntent(it) } }
-            notificationManagerCompat.notify(NOTIFICATION_ID, builder.build())
+            if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
+            
+            val notificationManager = NotificationManagerCompat.from(this@MusicPlayerService)
+            ensureNotificationChannel(CHANNEL_ID_ERROR, getString(R.string.notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
+            
+            val builder = NotificationCompat.Builder(this@MusicPlayerService, CHANNEL_ID_ERROR)
+                .setContentTitle(getString(R.string.notification_content_title))
+                .setStyle(NotificationCompat.BigTextStyle().bigText(getString(R.string.notification_content_text)))
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+                .setContentIntent(getBackStackedActivity())
+            
+            notificationManager.notify(NOTIFICATION_ID_ERROR, builder.build())
         }
     }
 
-    private fun ensureNotificationChannel(notificationManagerCompat: NotificationManagerCompat) {
-        if (
-            Build.VERSION.SDK_INT < 26 ||
-            notificationManagerCompat.getNotificationChannel(CHANNEL_ID) != null
-        ) {
-            return
-        }
-
-        val channel =
-            NotificationChannel(
-                CHANNEL_ID,
-                getString(R.string.notification_channel_name),
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
-        notificationManagerCompat.createNotificationChannel(channel)
-    }
-
-
-    private fun getBackStackedActivity(): PendingIntent? {
+    private fun getBackStackedActivity(): PendingIntent {
         return TaskStackBuilder.create(this).run {
             addNextIntent(Intent(this@MusicPlayerService, MainActivity::class.java))
-            getPendingIntent(0, IMMUTABLE_FLAG or PendingIntent.FLAG_UPDATE_CURRENT)
-        }
+            getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        }!!
     }
 
     companion object {
-        private const val NOTIFICATION_ID = 123
-        private const val CHANNEL_ID = "session_notification_channel_id"
-        private const val IMMUTABLE_FLAG = PendingIntent.FLAG_IMMUTABLE
+        private const val NOTIFICATION_ID_PLAYBACK = 1
+        private const val NOTIFICATION_ID_ERROR = 123
+        private const val CHANNEL_ID_PLAYBACK = "notification_id"
+        private const val CHANNEL_ID_ERROR = "session_notification_channel_id"
     }
-
 }

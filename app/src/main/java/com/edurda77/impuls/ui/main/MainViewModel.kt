@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @HiltViewModel
@@ -181,7 +182,7 @@ class MainViewModel @Inject constructor(
                             .updateState()
                     }
                 }
-                delay(5000)
+                delay(5000.milliseconds)
             }
         }
     }
