@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase
         RadioEntity::class,
         ProvinceEntity::class,
         RadioProvinceEntity::class],
-    version = 2
+    version = 3
 )
 abstract class RadioDatabase : RoomDatabase() {
     abstract val radioDao: RadioDao

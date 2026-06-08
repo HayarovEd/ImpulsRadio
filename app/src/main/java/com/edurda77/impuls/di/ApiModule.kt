@@ -18,12 +18,16 @@ import com.edurda77.impuls.domain.utils.DB
 import com.edurda77.impuls.domain.utils.PROVINCE_ID
 import com.edurda77.impuls.domain.utils.PROVINCE_NAME
 import com.edurda77.impuls.domain.utils.PROVINCE_TABLE
+import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_ID
 import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_NAME
 import com.edurda77.impuls.domain.utils.RADIO_TABLE_PROVINCE
 import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_TABLE
 import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_TIME
 import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_URL
 import com.edurda77.impuls.domain.utils.RADIO_TABLE
+import com.edurda77.impuls.domain.utils.RADIO_TABLE_ID
+import com.edurda77.impuls.domain.utils.RADIO_TABLE_NAME
+import com.edurda77.impuls.domain.utils.RADIO_TABLE_URL
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,7 +36,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
@@ -99,6 +102,7 @@ object ApiModule {
             DB
         )
             .addMigrations(migration1to2)
+            .addMigrations(migration2to3)
             .build()
     }
 
@@ -107,6 +111,33 @@ object ApiModule {
             db.execSQL("ALTER TABLE $RADIO_TABLE ADD COLUMN $RADIO_TABLE_PROVINCE INTEGER NOT NULL DEFAULT '-1'")
             db.execSQL("CREATE TABLE $PROVINCE_TABLE($PROVINCE_ID INTEGER PRIMARY KEY NOT NULL, $PROVINCE_NAME TEXT NOT NULL)")
             db.execSQL("CREATE TABLE $RADIO_PROVINCE_TABLE($RADIO_TABLE_PROVINCE INTEGER NOT NULL, $RADIO_PROVINCE_NAME TEXT PRIMARY KEY NOT NULL, $RADIO_PROVINCE_URL TEXT NOT NULL, $RADIO_PROVINCE_TIME INTEGER NOT NULL)")
+        }
+    }
+
+    private val migration2to3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Удаляем старые таблицы
+            db.execSQL("DROP TABLE IF EXISTS $RADIO_TABLE")
+            db.execSQL("DROP TABLE IF EXISTS $RADIO_PROVINCE_TABLE")
+
+            // Создаем новые таблицы с правильной структурой
+            db.execSQL("""
+            CREATE TABLE $RADIO_TABLE (
+                $RADIO_TABLE_ID INTEGER PRIMARY KEY NOT NULL,
+                $RADIO_TABLE_NAME TEXT NOT NULL,
+                $RADIO_TABLE_URL TEXT NOT NULL,
+                $RADIO_TABLE_PROVINCE INTEGER NOT NULL
+            )
+        """)
+
+            db.execSQL("""
+            CREATE TABLE $RADIO_PROVINCE_TABLE (
+                $RADIO_PROVINCE_ID INTEGER PRIMARY KEY NOT NULL,
+                $RADIO_PROVINCE_NAME TEXT NOT NULL,
+                $RADIO_PROVINCE_URL TEXT NOT NULL,
+                $RADIO_TABLE_PROVINCE INTEGER NOT NULL
+            )
+        """)
         }
     }
 }

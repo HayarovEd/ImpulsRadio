@@ -34,7 +34,7 @@ class CacheRepositoryImpl @Inject constructor(
                     name = name,
                     url = url,
                     provinceId = provinceId,
-                    time = System.currentTimeMillis()
+                    id = 0
                 )
             )
             ResultWork.Success(Unit)
@@ -110,8 +110,8 @@ class CacheRepositoryImpl @Inject constructor(
                     RadioProvinceEntity(
                         name = name,
                         url = url,
-                        time = System.currentTimeMillis(),
-                        provinceId = provinceId
+                        provinceId = provinceId,
+                        id = -1 //TODO
                     )
                 )
                 ResultWork.Success(Unit)
