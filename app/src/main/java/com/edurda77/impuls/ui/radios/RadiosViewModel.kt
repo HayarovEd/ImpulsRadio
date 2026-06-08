@@ -47,6 +47,7 @@ class RadiosViewModel @Inject constructor(
                 viewModelScope.launch {
                     dataStoreRepository.setRadioUrl(radiosEvent.radioStation.url)
                     dataStoreRepository.setRadioName(radiosEvent.radioStation.name)
+                    dataStoreRepository.setRadioId(radiosEvent.radioStation.id)
                     radioPlayerRepository.onStart(
                         title = radiosEvent.radioStation.name,
                         radioUrl = radiosEvent.radioStation.url

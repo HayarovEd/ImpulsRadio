@@ -1,13 +1,16 @@
 package com.edurda77.impuls.data.repository
 
 import com.edurda77.impuls.data.handler.handleResponse
+import com.edurda77.impuls.data.mapper.toSong
 import com.edurda77.impuls.data.remote.CategoryDto
 import com.edurda77.impuls.data.remote.LikeDto
 import com.edurda77.impuls.data.remote.LikeRequest
 import com.edurda77.impuls.data.remote.RadioDto
+import com.edurda77.impuls.data.remote.SongDto
 import com.edurda77.impuls.domain.model.Like
 import com.edurda77.impuls.domain.model.Province
 import com.edurda77.impuls.domain.model.RadioStation
+import com.edurda77.impuls.domain.model.Song
 import com.edurda77.impuls.domain.repository.RemoteRepository
 import com.edurda77.impuls.domain.utils.BASE_URL
 import com.edurda77.impuls.domain.utils.DataError
@@ -16,6 +19,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -89,6 +93,19 @@ class RemoteRepositoryImpl @Inject constructor(
         return handleResponse {
             httpClient.delete("${BASE_URL}likes/$likeId") {
                 contentType(ContentType.Application.Json)
+            }
+        }
+    }
+
+
+    override suspend fun getLastSongsByRadio(radioId: Int): ResultWork<List<Song>, DataError.Network> {
+        return handleResponse {
+            val response = httpClient.get("${BASE_URL}songs/last_songs_by_id") {
+                contentType(ContentType.Application.Json)
+                parameter("radio_id", radioId)
+            }.bodyAsText()
+            Json.decodeFromString<List<SongDto>>(response).map {
+                it.toSong()
             }
         }
     }

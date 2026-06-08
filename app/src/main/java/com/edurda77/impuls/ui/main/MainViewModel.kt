@@ -5,16 +5,20 @@ import androidx.lifecycle.viewModelScope
 import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
+import com.edurda77.impuls.domain.repository.RemoteRepository
 import com.edurda77.impuls.domain.repository.ServiceRepository
 import com.edurda77.impuls.domain.usecase.DeleteLikeUseCase
 import com.edurda77.impuls.domain.usecase.LikeUseCase
 import com.edurda77.impuls.domain.utils.READ_ERROR_TRACK
 import com.edurda77.impuls.domain.utils.ResultWork
+import com.edurda77.impuls.ui.main.MainEvent.*
 import com.edurda77.impuls.ui.uikit.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,20 +33,56 @@ class MainViewModel @Inject constructor(
     private val serviceRepository: ServiceRepository,
     private val likeUseCase: LikeUseCase,
     private val deleteLikeUseCase: DeleteLikeUseCase,
+    private val remoteRepository: RemoteRepository
 ) : ViewModel() {
 
     private var _state = MutableStateFlow(MainState())
     val state = _state.asStateFlow()
+       /* .onStart {
+
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = MainState()
+        )*/
+
+
+    private val _eventFlow = Channel<MainEvent>()
+    val eventFlow = _eventFlow.receiveAsFlow()
 
 
     init {
+   //     loadLastSongs()
         getRadioUrl()
         getRadioName()
+        getRadioId()
         getMetaData()
         getSessionId()
         getLastRadios()
         checkIsPlayed()
         checkEnableInternet()
+    }
+
+
+    private fun loadLastSongs(radioId: Int?) {
+        viewModelScope.launch {
+            radioId?.let { id->
+                when (val result = remoteRepository.getLastSongsByRadio(id)) {
+                    is ResultWork.Error -> {
+                        _eventFlow.send(OnError(result.error.asUiText().toString()))
+                    }
+
+                    is ResultWork.Success -> {
+                        _state.value.copy(
+                            lastSongs = result.data
+                        )
+                            .updateState()
+                    }
+                }
+            }
+
+        }
     }
 
     private fun checkEnableInternet() {
@@ -68,18 +108,20 @@ class MainViewModel @Inject constructor(
     }
 
 
-    fun onEvent(mainEvent: MainEvent) {
-        when (mainEvent) {
-            is MainEvent.OnPlay -> {
+    fun onEvent(mainAction: MainAction) {
+        when (mainAction) {
+            is MainAction.OnPlay -> {
                 viewModelScope.launch {
-                    dataStoreRepository.setRadioUrl(mainEvent.radioStation.url)
-                    dataStoreRepository.setRadioName(mainEvent.radioStation.name)
+                    dataStoreRepository.setRadioUrl(mainAction.radioStation.url)
+                    dataStoreRepository.setRadioName(mainAction.radioStation.name)
+                    dataStoreRepository.setRadioId(mainAction.radioStation.id)
+                    loadLastSongs(mainAction.radioStation.id)
                     radioPlayerRepository.onStart(
-                        title = mainEvent.radioStation.name,
-                        radioUrl = mainEvent.radioStation.url
+                        title = mainAction.radioStation.name,
+                        radioUrl = mainAction.radioStation.url
                     )
                     cacheRepository.insertRadio(
-                       radioStation = mainEvent.radioStation
+                       radioStation = mainAction.radioStation
                     )
                     /*_state.value.copy(
                         sessionId = audioSession
@@ -92,7 +134,7 @@ class MainViewModel @Inject constructor(
                     .updateState()
             }
 
-            MainEvent.OnStop -> {
+            MainAction.OnStop -> {
                 radioPlayerRepository.stopRadio()
                 _state.value.copy(
                     isPlayed = false
@@ -100,25 +142,25 @@ class MainViewModel @Inject constructor(
                     .updateState()
             }
 
-            is MainEvent.SetLike -> {
+            is MainAction.SetLike -> {
                 if (state.value.lastLike == null) {
-                    setLike(mainEvent.isLike)
+                    setLike(mainAction.isLike)
                 } else {
                     if (state.value.lastLike!!.song != state.value.track) {
-                        setLike(mainEvent.isLike)
+                        setLike(mainAction.isLike)
                     } else {
                         state.value.lastLike?.let { like ->
-                            if (mainEvent.isLike && like.isLiked) {
+                            if (mainAction.isLike && like.isLiked) {
                                 deleteLike(like.id)
                             }
-                            if (!mainEvent.isLike && !like.isLiked) {
+                            if (!mainAction.isLike && !like.isLiked) {
                                 deleteLike(like.id)
                             }
-                            if (mainEvent.isLike && !like.isLiked) {
+                            if (mainAction.isLike && !like.isLiked) {
                                 deleteLike(like.id)
                                 setLike(true)
                             }
-                            if (!mainEvent.isLike && like.isLiked) {
+                            if (!mainAction.isLike && like.isLiked) {
                                 deleteLike(like.id)
                                 setLike(false)
                             }
@@ -134,10 +176,7 @@ class MainViewModel @Inject constructor(
             cacheRepository.getAllData().collect { collector ->
                 when (collector) {
                     is ResultWork.Error -> {
-                        _state.value.copy(
-                            message = collector.error.asUiText()
-                        )
-                            .updateState()
+                        _eventFlow.send(MainEvent.OnError(collector.error.asUiText().toString()))
                     }
 
                     is ResultWork.Success -> {
@@ -214,6 +253,19 @@ class MainViewModel @Inject constructor(
         }
     }
 
+
+    private fun getRadioId() {
+        viewModelScope.launch {
+            dataStoreRepository.readRadioId().collect {
+                _state.value.copy(
+                    radioId = it
+                )
+                    .updateState()
+                loadLastSongs(it)
+            }
+        }
+    }
+
     private fun setLike(isLike: Boolean) {
         viewModelScope.launch {
             _state.value.copy(
@@ -226,8 +278,8 @@ class MainViewModel @Inject constructor(
                     isLike = isLike
                 )) {
                     is ResultWork.Error -> {
+                        _eventFlow.send(OnError(result.error.asUiText().toString()))
                         _state.value.copy(
-                            message = result.error.asUiText(),
                             loadingLike = false
                         )
                             .updateState()
@@ -256,8 +308,8 @@ class MainViewModel @Inject constructor(
                 likeId.toLong()
             )) {
                 is ResultWork.Error -> {
+                    _eventFlow.send(OnError(result.error.asUiText().toString()))
                     _state.value.copy(
-                        message = result.error.asUiText(),
                         loadingLike = false
                     )
                         .updateState()

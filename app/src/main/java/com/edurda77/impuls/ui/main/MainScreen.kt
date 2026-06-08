@@ -24,12 +24,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -56,6 +54,7 @@ import com.edurda77.impuls.ui.theme.blue34
 import com.edurda77.impuls.ui.theme.blue53
 import com.edurda77.impuls.ui.theme.white
 import com.edurda77.impuls.ui.uikit.ItemElement
+import com.edurda77.impuls.ui.uikit.ObserveAsEvents
 import com.edurda77.impuls.ui.uikit.SquareBarVisualizerRelease
 
 @Composable
@@ -64,9 +63,24 @@ fun MainScreenRoot(
     onNavigateToProvince: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    val snackBarState = remember { SnackbarHostState() }
+
+    ObserveAsEvents(viewModel.eventFlow) { event ->
+        when (event) {
+            is MainEvent.OnError -> {
+                snackBarState.showSnackbar(
+                    event.message
+                )
+            }
+        }
+    }
+
+
     MainScreen(
         state = state,
         onEvent = viewModel::onEvent,
+        snackBarState = snackBarState,
         onNavigateToProvince = onNavigateToProvince
     )
 }
@@ -76,24 +90,15 @@ fun MainScreenRoot(
 private fun MainScreen(
     modifier: Modifier = Modifier,
     state: MainState,
-    onEvent: (MainEvent) -> Unit,
+    snackBarState: SnackbarHostState,
+    onEvent: (MainAction) -> Unit,
     onNavigateToProvince: () -> Unit,
 ) {
 
-    val snakeBarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
-    LaunchedEffect(key1 = state.message) {
-        if (state.message != null) {
-            snakeBarHostState.showSnackbar(
-                message = state.message.asString(context),
-                duration = SnackbarDuration.Short
-            )
-        }
-    }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = blue34,
-        snackbarHost = { SnackbarHost(snakeBarHostState) },
+        snackbarHost = { SnackbarHost(snackBarState) },
         topBar = {
             if (!state.isEnableInternet) {
                 Text(
@@ -165,7 +170,7 @@ private fun MainScreen(
                                 && state.track.isNotBlank()
                                 && !state.loadingLike,
                         onClick = {
-                            onEvent(MainEvent.SetLike(false))
+                            onEvent(MainAction.SetLike(false))
                         }
                     ) {
                         Icon(
@@ -186,11 +191,11 @@ private fun MainScreen(
                         onClick = {
                             if (state.isPlayed) {
                                 onEvent(
-                                    MainEvent.OnStop
+                                    MainAction.OnStop
                                 )
                             } else {
                                 onEvent(
-                                    MainEvent.OnPlay(
+                                    MainAction.OnPlay(
                                         radioStation = state.lastRadio.last(),
                                     )
                                 )
@@ -212,7 +217,7 @@ private fun MainScreen(
                                 && state.track.isNotBlank()
                                 && !state.loadingLike,
                         onClick = {
-                            onEvent(MainEvent.SetLike(true))
+                            onEvent(MainAction.SetLike(true))
                         }
                     ) {
                         Icon(
@@ -270,7 +275,7 @@ private fun MainScreen(
                             name = it.name,
                             onClick = {
                                 onEvent(
-                                    MainEvent.OnPlay(
+                                    MainAction.OnPlay(
                                         radioStation = it
                                     )
                                 )
@@ -286,8 +291,10 @@ private fun MainScreen(
 @Preview
 @Composable
 private fun Preview() {
+    val snackBarState = remember { SnackbarHostState() }
     MainScreen(
         state = MainState(),
+        snackBarState = snackBarState,
         onEvent = {},
         onNavigateToProvince = {}
     )
@@ -296,6 +303,7 @@ private fun Preview() {
 @Preview
 @Composable
 private fun Preview1() {
+    val snackBarState = remember { SnackbarHostState() }
     MainScreen(
         state = MainState(
             isPlayed = true,
@@ -304,6 +312,7 @@ private fun Preview1() {
             radioName = "Impuls",
             track = "artist - song"
         ),
+        snackBarState = snackBarState,
         onEvent = {},
         onNavigateToProvince = {}
     )

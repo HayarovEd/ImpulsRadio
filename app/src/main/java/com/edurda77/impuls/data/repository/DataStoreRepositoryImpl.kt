@@ -10,11 +10,13 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.edurda77.impuls.domain.model.RadioStation
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.utils.DATE_UPDATE
 import com.edurda77.impuls.domain.utils.IS_PLAY
+import com.edurda77.impuls.domain.utils.RADIO_ID
 import com.edurda77.impuls.domain.utils.RADIO_NAME
-import com.edurda77.impuls.domain.utils.RADIO_TRACK
+import com.edurda77.impuls.domain.utils.RADIO_PT_ID
 import com.edurda77.impuls.domain.utils.RADIO_URL
 import com.edurda77.impuls.domain.utils.SESSION_ID
 import com.edurda77.impuls.domain.utils.SETTINGS
@@ -27,6 +29,29 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = SET
 class DataStoreRepositoryImpl @Inject constructor(
     private val application: Application
 ): DataStoreRepository {
+
+    override suspend fun setRadio(radioStation: RadioStation) {
+        application.dataStore.edit { settings ->
+            //Log.d("TEST REMOTE SERVICE DATA", "set radio $url")
+            settings[FIELD_RADIO_URL] = radioStation.url
+            settings[FIELD_RADIO_NAME] = radioStation.name
+            settings[FIELD_RADIO_ID] = radioStation.id
+            settings[FIELD_RADIO_PT_ID] = radioStation.provinceId
+        }
+    }
+
+    override fun readRadio(): Flow<RadioStation?> {
+        return application.dataStore.data.map {
+            if (it[FIELD_RADIO_URL] == null||it[FIELD_RADIO_NAME] == null||it[FIELD_RADIO_ID] == null||it[FIELD_RADIO_PT_ID] == null) {
+                return@map null
+            }
+            RadioStation(
+                id = it[FIELD_RADIO_ID]?:0,
+                name = it[FIELD_RADIO_NAME]?: "",
+                url = it[FIELD_RADIO_URL]?: "",
+                provinceId = it[FIELD_RADIO_PT_ID]?:0)
+        }
+    }
 
 
     override suspend fun setRadioUrl(url:String) {
@@ -43,17 +68,20 @@ class DataStoreRepositoryImpl @Inject constructor(
         }
     }
 
-    /*override suspend fun setTrack(track:String) {
+
+    override suspend fun setRadioId(radioId:Int) {
         application.dataStore.edit { settings ->
-            settings[FIELD_RADIO_TRACK] = track
+            settings[FIELD_RADIO_ID] = radioId
         }
     }
 
-    override fun readTrack(): Flow<String> {
+    override fun readRadioId(): Flow<Int?> {
         return application.dataStore.data.map {
-            it[FIELD_RADIO_TRACK]?:""
+            //Log.d("TEST REMOTE SERVICE DATA", "get radio ${it[FIELD_RADIO_URL]}")
+            it[FIELD_RADIO_ID]
         }
-    }*/
+    }
+
 
     override suspend fun setRadioName(name:String) {
         application.dataStore.edit { settings ->
@@ -94,6 +122,8 @@ class DataStoreRepositoryImpl @Inject constructor(
 
     companion object {
         val FIELD_RADIO_URL = stringPreferencesKey(RADIO_URL)
+        val FIELD_RADIO_ID = intPreferencesKey(RADIO_ID)
+        val FIELD_RADIO_PT_ID = intPreferencesKey(RADIO_PT_ID)
         //val FIELD_RADIO_TRACK = stringPreferencesKey(RADIO_TRACK)
         val FIELD_RADIO_NAME = stringPreferencesKey(RADIO_NAME)
         val FIELD_SESSION_ID = intPreferencesKey(SESSION_ID)
