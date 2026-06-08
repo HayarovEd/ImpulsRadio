@@ -16,15 +16,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @HiltViewModel
 class ProvincesViewModel @Inject constructor(
     private val provincesUseCase: ProvincesUseCase,
     private val serviceRepository: ServiceRepository,
-    private val dataStoreRepository: DataStoreRepository,
-    private val cacheRepository: CacheRepository,
-    private val radioPlayerRepository: RadioPlayerRepository,
 ) : ViewModel() {
 
     private var _state = MutableStateFlow(ProvinceState())
@@ -38,21 +36,6 @@ class ProvincesViewModel @Inject constructor(
 
     fun onEvent(event: ProvinceEvent) {
         when (event) {
-            is ProvinceEvent.OnPlay -> {
-                viewModelScope.launch {
-                    dataStoreRepository.setRadioUrl(event.url)
-                    dataStoreRepository.setRadioName(event.name)
-                    radioPlayerRepository.onStart(
-                        title = event.name,
-                        radioUrl = event.url
-                    )
-                    cacheRepository.insertRadio(
-                        name = event.name,
-                        url = event.url,
-                        provinceId = event.provinceId
-                    )
-                }
-            }
 
             ProvinceEvent.OnRefresh -> {
                 if (state.value.isEnableInternet) {
@@ -61,7 +44,7 @@ class ProvincesViewModel @Inject constructor(
                     )
                         .updateState()
                     viewModelScope.launch {
-                        delay(1000)
+                        delay(1000.milliseconds)
                         getProvinces(true)
                     }
                 }

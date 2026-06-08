@@ -72,16 +72,14 @@ class MainViewModel @Inject constructor(
         when (mainEvent) {
             is MainEvent.OnPlay -> {
                 viewModelScope.launch {
-                    dataStoreRepository.setRadioUrl(mainEvent.url)
-                    dataStoreRepository.setRadioName(mainEvent.name)
+                    dataStoreRepository.setRadioUrl(mainEvent.radioStation.url)
+                    dataStoreRepository.setRadioName(mainEvent.radioStation.name)
                     radioPlayerRepository.onStart(
-                        title = mainEvent.name,
-                        radioUrl = mainEvent.url
+                        title = mainEvent.radioStation.name,
+                        radioUrl = mainEvent.radioStation.url
                     )
                     cacheRepository.insertRadio(
-                        name = mainEvent.name,
-                        url = mainEvent.url,
-                        provinceId = mainEvent.provinceId
+                       radioStation = mainEvent.radioStation
                     )
                     /*_state.value.copy(
                         sessionId = audioSession

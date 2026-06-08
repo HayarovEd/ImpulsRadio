@@ -41,9 +41,7 @@ class RadiosUseCase @Inject constructor(
             is ResultWork.Success -> {
                 resultProvinces.data.map {
                     cacheRepository.insertRadioOfProvince(
-                        name = it.name,
-                        provinceId = id,
-                        url = it.url
+                       radioStation = it
                     )
                 }
                 return ResultWork.Success(resultProvinces.data)

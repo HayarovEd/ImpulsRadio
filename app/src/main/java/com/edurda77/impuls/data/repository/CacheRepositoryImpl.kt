@@ -24,17 +24,15 @@ class CacheRepositoryImpl @Inject constructor(
     private val dao = db.radioDao
 
     override suspend fun insertRadio(
-        name: String,
-        url: String,
-        provinceId: Int,
+        radioStation: RadioStation
     ): ResultWork<Unit, DataError.LocalDataError> {
         return try {
             dao.insertRadio(
                 RadioEntity(
-                    name = name,
-                    url = url,
-                    provinceId = provinceId,
-                    id = 0
+                    name = radioStation.name,
+                    url = radioStation.url,
+                    provinceId = radioStation.provinceId,
+                    id = radioStation.id
                 )
             )
             ResultWork.Success(Unit)
@@ -100,18 +98,16 @@ class CacheRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertRadioOfProvince(
-        name: String,
-        provinceId: Int,
-        url: String,
+        radioStation: RadioStation
     ): ResultWork<Unit, DataError.LocalDataError> {
         return withContext(Dispatchers.IO) {
             try {
                 dao.insertRadioProvince(
                     RadioProvinceEntity(
-                        name = name,
-                        url = url,
-                        provinceId = provinceId,
-                        id = -1 //TODO
+                        name = radioStation.name,
+                        url = radioStation.url,
+                        provinceId = radioStation.provinceId,
+                        id = radioStation.id
                     )
                 )
                 ResultWork.Success(Unit)

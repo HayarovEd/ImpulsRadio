@@ -191,9 +191,7 @@ private fun MainScreen(
                             } else {
                                 onEvent(
                                     MainEvent.OnPlay(
-                                        name = state.lastRadio.last().name,
-                                        url = state.lastRadio.last().url,
-                                        provinceId = state.lastRadio.last().provinceId,
+                                        radioStation = state.lastRadio.last(),
                                     )
                                 )
                             }
@@ -273,9 +271,7 @@ private fun MainScreen(
                             onClick = {
                                 onEvent(
                                     MainEvent.OnPlay(
-                                        name = it.name,
-                                        url = it.url,
-                                        provinceId = it.provinceId
+                                        radioStation = it
                                     )
                                 )
                             }

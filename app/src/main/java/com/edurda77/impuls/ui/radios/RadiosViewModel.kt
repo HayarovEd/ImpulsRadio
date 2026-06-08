@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @HiltViewModel
 class RadiosViewModel @Inject constructor(
     private val radiosUseCase: RadiosUseCase,
-    private val savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
     private val radioPlayerRepository: RadioPlayerRepository,
     private val dataStoreRepository: DataStoreRepository,
     private val cacheRepository: CacheRepository,
@@ -45,16 +45,14 @@ class RadiosViewModel @Inject constructor(
         when (radiosEvent) {
             is RadiosEvent.OnPlay -> {
                 viewModelScope.launch {
-                    dataStoreRepository.setRadioUrl(radiosEvent.url)
-                    dataStoreRepository.setRadioName(radiosEvent.name)
+                    dataStoreRepository.setRadioUrl(radiosEvent.radioStation.url)
+                    dataStoreRepository.setRadioName(radiosEvent.radioStation.name)
                     radioPlayerRepository.onStart(
-                        title = radiosEvent.name,
-                        radioUrl = radiosEvent.url
+                        title = radiosEvent.radioStation.name,
+                        radioUrl = radiosEvent.radioStation.url
                     )
                     cacheRepository.insertRadio(
-                        name = radiosEvent.name,
-                        url = radiosEvent.url,
-                        provinceId = radiosEvent.provinceId
+                        radioStation = radiosEvent.radioStation
                     )
                 }
             }

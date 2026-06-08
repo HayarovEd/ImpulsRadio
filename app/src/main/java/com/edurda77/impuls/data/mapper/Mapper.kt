@@ -14,7 +14,7 @@ fun List<RadioEntity>.convertToRadios(): List<RadioStation> {
             name = radio.name,
             url = radio.url,
             provinceId = radio.provinceId,
-            time = System.currentTimeMillis()
+            id = radio.id
         )
     }
 }
@@ -25,7 +25,7 @@ fun List<RadioProvinceEntity>.radioProvinceEntityConvertToRadios(): List<RadioSt
             name = radio.name,
             url = radio.url,
             provinceId = radio.provinceId,
-            time = System.currentTimeMillis()
+            id = radio.id
         )
     }
 }

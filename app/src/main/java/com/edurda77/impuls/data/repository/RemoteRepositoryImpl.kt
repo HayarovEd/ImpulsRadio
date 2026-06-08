@@ -52,7 +52,7 @@ class RemoteRepositoryImpl @Inject constructor(
                     name = it.name,
                     url = it.link,
                     provinceId = it.categoryId,
-                    time = System.currentTimeMillis()
+                    id = it.id
                 )
             }
             radios

@@ -8,10 +8,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface CacheRepository {
     suspend fun insertRadio(
-        name: String,
-        url: String,
-        provinceId: Int,
-        ): ResultWork<Unit, DataError.LocalDataError>
+        radioStation: RadioStation
+    ): ResultWork<Unit, DataError.LocalDataError>
+
     suspend fun getAllData(): Flow<ResultWork<List<RadioStation>, DataError.LocalDataError>>
 
 
@@ -19,9 +18,7 @@ interface CacheRepository {
     suspend fun clearCacheProvinces(): ResultWork<Unit, DataError.LocalDataError>
     suspend fun getAllProvinces(): ResultWork<List<Province>, DataError.LocalDataError>
     suspend fun insertRadioOfProvince(
-        name: String,
-        provinceId: Int,
-        url: String
+        radioStation: RadioStation
     ): ResultWork<Unit, DataError.LocalDataError>
 
     suspend fun getRadiosByProvince(id: Int): ResultWork<List<RadioStation>, DataError.LocalDataError>

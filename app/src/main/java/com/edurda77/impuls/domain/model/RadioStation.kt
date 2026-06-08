@@ -4,5 +4,5 @@ data class RadioStation(
     val name:String,
     val url: String,
     val provinceId:Int,
-    val time: Long,
+    val id:Int,
 )
