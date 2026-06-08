@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @HiltViewModel
@@ -32,6 +33,8 @@ class RadiosViewModel @Inject constructor(
     private var _state = MutableStateFlow(RadiosState())
     val state = _state.asStateFlow()
 
+    private val id = savedStateHandle.get<Int>("id")
+    private val name = savedStateHandle.get<String>("name")
 
     init {
         getSavedData()
@@ -71,8 +74,6 @@ class RadiosViewModel @Inject constructor(
     }
 
     private fun getSavedData() {
-        val id = savedStateHandle.get<Int>("id")
-        val name = savedStateHandle.get<String>("name")
         _state.value.copy(
             nameOfProvince = name ?: "",
             id = id ?: -1
@@ -88,7 +89,7 @@ class RadiosViewModel @Inject constructor(
             isLoading = true
         )
             .updateState()
-        delay(1000)
+        delay(1000.milliseconds)
         when (val result = radiosUseCase.invoke(
             id = state.value.id,
             isRefresh = isRefresh

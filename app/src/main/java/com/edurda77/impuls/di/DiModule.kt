@@ -4,7 +4,7 @@ import androidx.media3.common.util.UnstableApi
 import com.edurda77.impuls.data.repository.CacheRepositoryImpl
 import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl
 import com.edurda77.impuls.data.repository.RadioPlayerRepositoryImpl
-import com.edurda77.impuls.data.repository.RemoteRepositoryJsonImpl
+import com.edurda77.impuls.data.repository.RemoteRepositoryImpl
 import com.edurda77.impuls.data.repository.ServiceRepositoryImpl
 import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
@@ -23,7 +23,7 @@ abstract class DiModule {
 
     @Binds
     @Singleton
-    abstract fun bindRepository(remoteRepositoryJsonImpl: RemoteRepositoryJsonImpl): RemoteRepository
+    abstract fun bindRepository(remoteRepositoryImpl: RemoteRepositoryImpl): RemoteRepository
 
     @UnstableApi
     @Binds
