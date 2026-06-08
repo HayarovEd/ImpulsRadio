@@ -23,5 +23,4 @@
     <string name="not_internet">Нет соединения</string>
     <string name="error_read_track">Ожидание ответа сервера</string>
     <string name="last_songs">Последние композиции</string>
-    <string name="last_songs_desc">Недавно прослушанные треки</string>
 </resources>

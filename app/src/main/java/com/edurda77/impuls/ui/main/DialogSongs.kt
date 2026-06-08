@@ -45,7 +45,6 @@ fun DialogSongs(
         // Заголовок секции
         SectionHeader(
             title = stringResource(R.string.last_songs),
-            subtitle = stringResource(R.string.last_songs_desc)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -74,7 +73,6 @@ fun DialogSongs(
 @Composable
 private fun SectionHeader(
     title: String,
-    subtitle: String? = null
 ) {
     Column(
         modifier = Modifier
@@ -87,15 +85,6 @@ private fun SectionHeader(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
-
-        if (subtitle != null) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = subtitle,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
     }
 }
 
