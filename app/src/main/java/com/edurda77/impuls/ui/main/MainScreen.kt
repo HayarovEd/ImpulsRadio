@@ -1,5 +1,7 @@
 package com.edurda77.impuls.ui.main
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -29,13 +31,14 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -45,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.edurda77.impuls.R
@@ -65,6 +69,7 @@ fun MainScreenRoot(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     val snackBarState = remember { SnackbarHostState() }
+    var isVisibleSongs by remember { mutableStateOf(false) }
 
     ObserveAsEvents(viewModel.eventFlow) { event ->
         when (event) {
@@ -81,19 +86,41 @@ fun MainScreenRoot(
         state = state,
         onEvent = viewModel::onEvent,
         snackBarState = snackBarState,
-        onNavigateToProvince = onNavigateToProvince
+        isVisibleSongs = isVisibleSongs,
+        onNavigateToProvince = onNavigateToProvince,
+        updateVisibleSongs = {
+            isVisibleSongs = it
+        }
     )
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun MainScreen(
     modifier: Modifier = Modifier,
     state: MainState,
+    isVisibleSongs: Boolean,
     snackBarState: SnackbarHostState,
     onEvent: (MainAction) -> Unit,
     onNavigateToProvince: () -> Unit,
+    updateVisibleSongs: (Boolean) -> Unit,
 ) {
+
+    if (isVisibleSongs) {
+        Dialog(
+            onDismissRequest = {
+                updateVisibleSongs(false)
+            },
+            content = {
+                DialogSongs(
+                    songs = state.lastSongs
+                )
+            }
+        )
+    }
+
+
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -235,23 +262,43 @@ private fun MainScreen(
                 }
                 Spacer(modifier = modifier.height(10.dp))
             }
-            Button(
-                modifier = modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(15.dp),
-                contentPadding = PaddingValues(vertical = 10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = blue53
-                ),
-                onClick = onNavigateToProvince
+            Row(
+                modifier = modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(R.string.choise_radio),
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight(400),
-                        color = white
+                Button(
+                    modifier = modifier.weight(1f),
+                    shape = RoundedCornerShape(15.dp),
+                    contentPadding = PaddingValues(vertical = 10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = blue53
+                    ),
+                    onClick = onNavigateToProvince
+                ) {
+                    Text(
+                        text = stringResource(R.string.choise_radio),
+                        style = TextStyle(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight(400),
+                            color = white
+                        )
                     )
-                )
+                }
+                if (state.isEnableInternet) {
+                    IconButton(
+                        modifier = modifier,
+                        onClick = {
+                            updateVisibleSongs(true)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.songs),
+                            contentDescription = "",
+                            tint = white
+                        )
+                    }
+                }
             }
             Spacer(modifier = modifier.height(10.dp))
             Text(
@@ -288,6 +335,7 @@ private fun MainScreen(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview
 @Composable
 private fun Preview() {
@@ -295,8 +343,10 @@ private fun Preview() {
     MainScreen(
         state = MainState(),
         snackBarState = snackBarState,
+        isVisibleSongs = false,
         onEvent = {},
-        onNavigateToProvince = {}
+        onNavigateToProvince = {},
+        updateVisibleSongs = {}
     )
 }
 
@@ -312,8 +362,31 @@ private fun Preview1() {
             radioName = "Impuls",
             track = "artist - song"
         ),
+        isVisibleSongs = true,
         snackBarState = snackBarState,
         onEvent = {},
-        onNavigateToProvince = {}
+        onNavigateToProvince = {},
+        updateVisibleSongs = {}
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview
+@Composable
+private fun Preview2() {
+    val snackBarState = remember { SnackbarHostState() }
+    MainScreen(
+        state = MainState(
+            isPlayed = true,
+            isShowButton = true,
+            isEnableInternet = true,
+            radioName = "Impuls",
+            track = "artist - song"
+        ),
+        isVisibleSongs = false,
+        snackBarState = snackBarState,
+        onEvent = {},
+        onNavigateToProvince = {},
+        updateVisibleSongs = {}
     )
 }
