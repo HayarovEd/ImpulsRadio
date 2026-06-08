@@ -6,11 +6,13 @@ import com.edurda77.impuls.data.repository.DataStoreRepositoryImpl
 import com.edurda77.impuls.data.repository.RadioPlayerRepositoryImpl
 import com.edurda77.impuls.data.repository.RemoteRepositoryImpl
 import com.edurda77.impuls.data.repository.ServiceRepositoryImpl
+import com.edurda77.impuls.data.repository.WebSocketRepositoryImpl
 import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
 import com.edurda77.impuls.domain.repository.RemoteRepository
 import com.edurda77.impuls.domain.repository.ServiceRepository
+import com.edurda77.impuls.domain.repository.WebSocketRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -42,5 +44,8 @@ abstract class DiModule {
     @Singleton
     abstract fun bindServiceRepository(serviceRepositoryImpl: ServiceRepositoryImpl): ServiceRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindWebSocketRepository(webSocketRepositoryImpl: WebSocketRepositoryImpl): WebSocketRepository
 
 }

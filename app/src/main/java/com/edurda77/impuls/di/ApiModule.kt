@@ -20,13 +20,13 @@ import com.edurda77.impuls.domain.utils.PROVINCE_NAME
 import com.edurda77.impuls.domain.utils.PROVINCE_TABLE
 import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_ID
 import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_NAME
-import com.edurda77.impuls.domain.utils.RADIO_TABLE_PROVINCE
 import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_TABLE
 import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_TIME
 import com.edurda77.impuls.domain.utils.RADIO_PROVINCE_URL
 import com.edurda77.impuls.domain.utils.RADIO_TABLE
 import com.edurda77.impuls.domain.utils.RADIO_TABLE_ID
 import com.edurda77.impuls.domain.utils.RADIO_TABLE_NAME
+import com.edurda77.impuls.domain.utils.RADIO_TABLE_PROVINCE
 import com.edurda77.impuls.domain.utils.RADIO_TABLE_URL
 import dagger.Module
 import dagger.Provides
@@ -39,6 +39,8 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import javax.inject.Singleton
@@ -89,6 +91,15 @@ object ApiModule {
                 json(Json {
                     ignoreUnknownKeys = true
                 })
+            }
+            install(WebSockets) {
+                val json = Json {
+                    ignoreUnknownKeys = true
+                    coerceInputValues = true
+                    encodeDefaults = true
+                    explicitNulls = false
+                }
+                contentConverter = KotlinxWebsocketSerializationConverter(json)
             }
         }
     }

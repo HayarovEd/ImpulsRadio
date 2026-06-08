@@ -2,11 +2,13 @@ package com.edurda77.impuls.ui.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.edurda77.impuls.domain.model.WebSocketMessage
 import com.edurda77.impuls.domain.repository.CacheRepository
 import com.edurda77.impuls.domain.repository.DataStoreRepository
 import com.edurda77.impuls.domain.repository.RadioPlayerRepository
 import com.edurda77.impuls.domain.repository.RemoteRepository
 import com.edurda77.impuls.domain.repository.ServiceRepository
+import com.edurda77.impuls.domain.repository.WebSocketRepository
 import com.edurda77.impuls.domain.usecase.DeleteLikeUseCase
 import com.edurda77.impuls.domain.usecase.LikeUseCase
 import com.edurda77.impuls.domain.utils.READ_ERROR_TRACK
@@ -33,19 +35,20 @@ class MainViewModel @Inject constructor(
     private val serviceRepository: ServiceRepository,
     private val likeUseCase: LikeUseCase,
     private val deleteLikeUseCase: DeleteLikeUseCase,
-    private val remoteRepository: RemoteRepository
+    private val remoteRepository: RemoteRepository,
+    private val webSocketRepository: WebSocketRepository
 ) : ViewModel() {
 
     private var _state = MutableStateFlow(MainState())
     val state = _state.asStateFlow()
-       /* .onStart {
+    /* .onStart {
 
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000L),
-            initialValue = MainState()
-        )*/
+     }
+     .stateIn(
+         scope = viewModelScope,
+         started = SharingStarted.WhileSubscribed(5_000L),
+         initialValue = MainState()
+     )*/
 
 
     private val _eventFlow = Channel<MainEvent>()
@@ -53,7 +56,7 @@ class MainViewModel @Inject constructor(
 
 
     init {
-   //     loadLastSongs()
+        //     loadLastSongs()
         getRadioUrl()
         getRadioName()
         getRadioId()
@@ -62,12 +65,13 @@ class MainViewModel @Inject constructor(
         getLastRadios()
         checkIsPlayed()
         checkEnableInternet()
+        updateSongs()
     }
 
 
     private fun loadLastSongs(radioId: Int?) {
         viewModelScope.launch {
-            radioId?.let { id->
+            radioId?.let { id ->
                 when (val result = remoteRepository.getLastSongsByRadio(id)) {
                     is ResultWork.Error -> {
                         _eventFlow.send(OnError(result.error.asUiText().toString()))
@@ -121,7 +125,7 @@ class MainViewModel @Inject constructor(
                         radioUrl = mainAction.radioStation.url
                     )
                     cacheRepository.insertRadio(
-                       radioStation = mainAction.radioStation
+                        radioStation = mainAction.radioStation
                     )
                     /*_state.value.copy(
                         sessionId = audioSession
@@ -176,7 +180,7 @@ class MainViewModel @Inject constructor(
             cacheRepository.getAllData().collect { collector ->
                 when (collector) {
                     is ResultWork.Error -> {
-                        _eventFlow.send(MainEvent.OnError(collector.error.asUiText().toString()))
+                        _eventFlow.send(OnError(collector.error.asUiText().toString()))
                     }
 
                     is ResultWork.Success -> {
@@ -322,6 +326,33 @@ class MainViewModel @Inject constructor(
                         loadingLike = false
                     )
                         .updateState()
+                }
+            }
+        }
+    }
+
+    private fun updateSongs() {
+        viewModelScope.launch {
+            webSocketRepository.getStateStream().collect { collector ->
+                when (collector) {
+                    is ResultWork.Error -> {
+                        _eventFlow.send(OnError(collector.error.asUiText().toString()))
+                    }
+
+                    is ResultWork.Success -> {
+                        state.value.radioId?.let { id ->
+                            when (val result = collector.data) {
+                                is WebSocketMessage.SongAdd -> {
+                                    val rightSongs =
+                                        result.songs.filter { song -> song.radioId == id }
+                                    _state.value.copy(
+                                        lastSongs = (rightSongs + state.value.lastSongs).take(10)
+                                    )
+                                        .updateState()
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
